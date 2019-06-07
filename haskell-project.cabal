@@ -37,6 +37,8 @@ library
     , mtl
     , split
     , cryptonite
+    , bytestring
+    , cryptohash-md5
   default-language: Haskell2010
 
 executable haskell-project-exe
@@ -50,7 +52,6 @@ executable haskell-project-exe
       base >=4.7 && <5
     , haskell-project
     , bytestring
-    , cryptohash-md5
   default-language: Haskell2010
 
 test-suite haskell-project-test

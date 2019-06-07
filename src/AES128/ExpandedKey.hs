@@ -1,5 +1,7 @@
 module AES128.ExpandedKey
-    ( generateExpandedKey
+    ( addRoundKey
+    , popSubKey
+    , generateExpandedKey
     ) where
 
 import Control.Monad.State.Lazy
@@ -12,6 +14,24 @@ import AES128.Utils
 
 type KeyWord = [Word8]
 type RC = Word8
+
+
+addRoundKey :: AESState -> Key -> AESState
+addRoundKey st@(AESState w0 w1 w2 w3) (Key128 key) =
+  st {w0 = zipWith xor w0 first, w1 = zipWith xor w1 second, w2 = zipWith xor w2 third, w3 = zipWith xor w3 fourth}
+  where
+    first = take 4 key
+    second = take 4 $ drop 4 key
+    third = take 4 $ drop 8 key
+    fourth = take 4 $ drop 12 key
+
+
+popSubKey :: State [Key] Key
+popSubKey = do
+  keys <- get
+  put $ tail keys
+  return $ head keys
+
 
 generateExpandedKey :: Key -> [Key]
 generateExpandedKey k = reverse keys

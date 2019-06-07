@@ -1,12 +1,14 @@
-module AES128.Encryption where
+module AES128.Encryption
+  ( encrypt
+  ) where
 
+import           AES128.ExpandedKey
 import           AES128.SBox
 import           AES128.Utils
-import           AES128.ExpandedKey
-import           Data.Word
 import           Control.Monad.State.Lazy
 import           Data.Bits                (xor)
 import           Data.List
+import           Data.Word
 
 subWord :: [Word8] -> [Word8]
 subWord = map subByte
@@ -20,6 +22,12 @@ shiftRows st@(AESState w0 w1 w2 w3) = shift w0 w1 w2 w3
     shift [w00, w01, w02, w03] [w10, w11, w12, w13] [w20, w21, w22, w23] [w30, w31, w32, w33] =
       st {w0 = [w00, w11, w22, w33], w1 = [w10, w21, w32, w03], w2 = [w20, w31, w02, w13], w3 = [w30, w01, w12, w23]}
 
+mcCommon :: [[Word8]] -> AESState -> AESState
+mcCommon mat st@(AESState w0 w1 w2 w3) =
+  st {w0 = multMatCol mat w0, w1 = multMatCol mat w1, w2 = multMatCol mat w2, w3 = multMatCol mat w3}
+  where
+    multMatCol mat col = [doMult str col | str <- mat]
+    doMult str col = foldl' aesAdd 0 (zipWith aesMultiply str col)
 
 mixColumns :: AESState -> AESState
 mixColumns = mcCommon matrixConst
@@ -27,14 +35,11 @@ mixColumns = mcCommon matrixConst
     matrixConst =
       [[0x02, 0x03, 0x01, 0x01], [0x01, 0x02, 0x03, 0x01], [0x01, 0x01, 0x02, 0x03], [0x03, 0x01, 0x01, 0x02]]
 
-
-
 roundEncrypt :: AESState -> Key -> AESState
 roundEncrypt state = addRoundKey (mixColumns $ shiftRows $ subBytes state)
 
 finalRoundEncrypt :: AESState -> Key -> AESState
 finalRoundEncrypt state = addRoundKey (shiftRows $ subBytes state)
-
 
 encryptStateful :: Int -> AESState -> State [Key] AESState
 encryptStateful 1 state = do
@@ -44,8 +49,11 @@ encryptStateful n state = do
   subKey <- popSubKey
   encryptStateful (n - 1) $ roundEncrypt state subKey
 
-encrypt :: Block -> Key -> Block
-encrypt block key = stateToBlock $ evalState stateMonad $ generateExpandedKey key
+encryptBlock :: Block -> Key -> Block
+encryptBlock block key = stateToBlock $ evalState stateMonad $ generateExpandedKey key
   where
     aesState = blockToState block
-    stateMonad = encryptStateful 10 $ addRoundKey aesState key
+    stateMonad = encryptStateful amountRounds $ addRoundKey aesState key
+
+encrypt :: [Block] -> Key -> [Block]
+encrypt blocks key = map (\bl -> encryptBlock bl key) blocks

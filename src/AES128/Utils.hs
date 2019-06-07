@@ -3,22 +3,28 @@ module AES128.Utils
   , Key(Key128)
   , AESState(..)
   , aesPolynomial
+  , amountRounds
+  , blockSize
   , aesMultiply
   , aesAdd
   , blockToState
   , stateToBlock
-  , mcCommon
-  , popSubKey
-  , addRoundKey
+  , passwordHash
+  , splitByBlocks
+  , unionBlocks
   ) where
 
-import           Data.Word
-import           Crypto.Number.F2m        (addF2m, mulF2m)
 import           Control.Monad.State.Lazy
+import qualified Crypto.Hash.MD5          as MD5
+import           Crypto.Number.F2m        (addF2m, mulF2m)
 import           Data.Bits                (xor)
+import qualified Data.ByteString          as B
 import           Data.List
+import           Data.List.Split          (chunksOf)
+import           Data.Word
 
-newtype Block = Block [Word8]
+newtype Block =
+  Block [Word8]
   deriving (Show) -- 16 bytes
 
 newtype Key =
@@ -34,6 +40,12 @@ data AESState = AESState
 
 aesPolynomial :: Integer
 aesPolynomial = 0x11B
+
+amountRounds :: Int
+amountRounds = 10
+
+blockSize :: Int
+blockSize = 16
 
 aesMultiply :: Word8 -> Word8 -> Word8
 aesMultiply w1 w2 = fromIntegral $ mulF2m aesPolynomial (fromIntegral w1) (fromIntegral w2)
@@ -52,27 +64,33 @@ blockToState (Block block) = AESState first second third fourth
 stateToBlock :: AESState -> Block
 stateToBlock (AESState w0 w1 w2 w3) = Block (w0 ++ w1 ++ w2 ++ w3)
 
+passwordHash :: B.ByteString -> Key
+passwordHash pass = Key128 (B.unpack $ MD5.hash pass)
 
-mcCommon :: [[Word8]] -> AESState -> AESState
-mcCommon mat st@(AESState w0 w1 w2 w3) =
-  st {w0 = multMatCol mat w0, w1 = multMatCol mat w1, w2 = multMatCol mat w2, w3 = multMatCol mat w3}
+blockAdditionPKCS7 :: Block -> Block
+blockAdditionPKCS7 bl@(Block bytes) =
+  if (blockLen == blockSize)
+    then bl
+    else Block (bytes ++ replicate amountAddBytes (fromIntegral amountAddBytes))
   where
-    multMatCol mat col = [doMult str col | str <- mat]
-    doMult str col = foldl' aesAdd 0 (zipWith aesMultiply str col)
+    blockLen = length bytes
+    amountAddBytes = blockSize - blockLen
 
-
-addRoundKey :: AESState -> Key -> AESState
-addRoundKey st@(AESState w0 w1 w2 w3) (Key128 key) =
-  st {w0 = zipWith xor w0 first, w1 = zipWith xor w1 second, w2 = zipWith xor w2 third, w3 = zipWith xor w3 fourth}
+splitByBlocks :: B.ByteString -> [Block]
+splitByBlocks input = blocks ++ [blockAdditionPKCS7 last]
   where
-    first = take 4 key
-    second = take 4 $ drop 4 key
-    third = take 4 $ drop 8 key
-    fourth = take 4 $ drop 12 key
+    (last:blocks) = reverse $ map (\el -> Block el) $ chunksOf blockSize $ B.unpack input
 
 
-popSubKey :: State [Key] Key
-popSubKey = do
-  keys <- get
-  put $ tail keys
-  return $ head keys
+removeBlockAdditionPKCS7 :: Block -> Block
+removeBlockAdditionPKCS7 bl@(Block bytes) =
+  if lastByte >= blockSize
+    then bl
+    else Block (take (blockSize - lastByte) bytes)
+  where
+    lastByte = fromIntegral $ last bytes
+
+unionBlocks :: [Block] -> B.ByteString
+unionBlocks inputBlocks = B.pack $ concat $ map (\(Block bytes) -> bytes) (blocks ++ [removeBlockAdditionPKCS7 last])
+  where
+    (last:blocks) = reverse inputBlocks

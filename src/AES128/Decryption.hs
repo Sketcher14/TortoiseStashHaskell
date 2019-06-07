@@ -1,12 +1,14 @@
-module AES128.Decryption where
+module AES128.Decryption
+  ( decrypt
+  ) where
 
+import           AES128.ExpandedKey
 import           AES128.SBox
 import           AES128.Utils
-import           AES128.ExpandedKey
-import           Data.Word
 import           Control.Monad.State.Lazy
 import           Data.Bits                (xor)
 import           Data.List
+import           Data.Word
 
 invSubWord :: [Word8] -> [Word8]
 invSubWord = map invSubByte
@@ -21,7 +23,12 @@ invShiftRows st@(AESState w0 w1 w2 w3) = shift w0 w1 w2 w3
     shift [w00, w01, w02, w03] [w10, w11, w12, w13] [w20, w21, w22, w23] [w30, w31, w32, w33] =
       st {w0 = [w00, w31, w22, w13], w1 = [w10, w01, w32, w23], w2 = [w20, w11, w02, w33], w3 = [w30, w21, w12, w03]}
 
-
+mcCommon :: [[Word8]] -> AESState -> AESState
+mcCommon mat st@(AESState w0 w1 w2 w3) =
+  st {w0 = multMatCol mat w0, w1 = multMatCol mat w1, w2 = multMatCol mat w2, w3 = multMatCol mat w3}
+  where
+    multMatCol mat col = [doMult str col | str <- mat]
+    doMult str col = foldl' aesAdd 0 (zipWith aesMultiply str col)
 
 invMixColumns :: AESState -> AESState
 invMixColumns = mcCommon matrixConst
@@ -29,27 +36,28 @@ invMixColumns = mcCommon matrixConst
     matrixConst =
       [[0x0E, 0x0B, 0x0D, 0x09], [0x09, 0x0E, 0x0B, 0x0D], [0x0D, 0x09, 0x0E, 0x0B], [0x0B, 0x0D, 0x09, 0x0E]]
 
-
 roundDecrypt :: AESState -> Key -> AESState
 roundDecrypt state key = invSubBytes $ invShiftRows $ invMixColumns $ addRoundKey state key
 
 finalRoundDecrypt :: AESState -> Key -> AESState
 finalRoundDecrypt state key = invSubBytes $ invShiftRows $ addRoundKey state key
 
-
 decryptStateful :: Int -> AESState -> State [Key] AESState
 decryptStateful 0 state = return state
 decryptStateful n state
-  | n == 10 = do
+  | n == amountRounds = do
     subKey <- popSubKey
     decryptStateful (n - 1) $ finalRoundDecrypt state subKey
-  | n < 10 = do
+  | n < amountRounds = do
     subKey <- popSubKey
     decryptStateful (n - 1) $ roundDecrypt state subKey
 
-decrypt :: Block -> Key -> Block
-decrypt block key = stateToBlock $ addRoundKey (evalState stateMonad reversedKeys) key
+decryptBlock :: Block -> Key -> Block
+decryptBlock block key = stateToBlock $ addRoundKey (evalState stateMonad reversedKeys) key
   where
     aesState = blockToState block
     reversedKeys = reverse $ generateExpandedKey key
-    stateMonad = decryptStateful 10 aesState
+    stateMonad = decryptStateful amountRounds aesState
+
+decrypt :: [Block] -> Key -> [Block]
+decrypt blocks key = map (\bl -> decryptBlock bl key) blocks
