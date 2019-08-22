@@ -1,3 +1,3 @@
-# Changelog for haskell-project
+# Changelog for TortoiseStash
 
 ## Unreleased changes
