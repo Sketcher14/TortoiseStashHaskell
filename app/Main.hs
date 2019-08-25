@@ -9,6 +9,7 @@ import           AES128.Decryption
 import           AES128.Encryption
 import           AES128.ExpandedKey
 import           AES128.Utils
+import           GUI.MainWindow
 
 block1 :: Block
 block1 = Block [0x6B, 0xC1, 0xBE, 0xE2, 0x2E, 0x40, 0x9F, 0x96, 0xE9, 0x3D, 0x7E, 0x11, 0x73, 0x93, 0x17, 0x2A]
@@ -20,9 +21,9 @@ prettyPrint :: [Word8] -> String
 prettyPrint words8 = concatMap (`showHex` " ") . B.unpack $ B.pack words8
 
 main :: IO ()
-main = do
-  input <- B.readFile "input.txt"
+main = mainWindow
+  {-input <- B.readFile "input.txt"
   password <- B.readFile "password.txt"
   let passHash = passwordHash password
   let ans = unionBlocks $ decrypt (encrypt (splitByBlocks input) passHash) passHash
-  B.writeFile "out.txt" ans
+  B.writeFile "out.txt" ans-}

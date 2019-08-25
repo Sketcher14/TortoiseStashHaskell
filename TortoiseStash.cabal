@@ -28,6 +28,8 @@ source-repository head
 library
   exposed-modules:
       AES128.Encryption, AES128.Decryption, AES128.ExpandedKey, AES128.SBox, AES128.Utils
+    , GUI.MainWindow, GUI.Utils, GUI.DecryptedObjectsActions, GUI.EncryptedObjectsActions
+    , GUI.IntermediateWindowsActions
   other-modules:
       Paths_TortoiseStash
   hs-source-dirs:
@@ -40,6 +42,7 @@ library
     , bytestring
     , cryptohash-md5
     , gtk3
+    , text
   default-language: Haskell2010
 
 executable TortoiseStash-exe
