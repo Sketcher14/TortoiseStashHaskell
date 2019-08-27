@@ -1,5 +1,7 @@
 module GUI.EncryptedObjectsActions 
-  ( buildEncAddButtons
+  ( updateEncDataState
+  , getEncFileFromDataState
+  , buildEncAddButtons
   , buildEncFileBoxes
   , buildEncTrashButtons
   , buildEncFCButtons
@@ -10,7 +12,27 @@ module GUI.EncryptedObjectsActions
 import GUI.Utils
 
 import Graphics.UI.Gtk
+import Data.IORef
 
+
+updateEncDataState :: DataState -> Int -> File -> DataState
+updateEncDataState state id file = state { enc = filesPack }
+  where
+    encFilesPack = enc state
+    filesPack = case id of
+                  1 -> encFilesPack { file1 = file }
+                  2 -> encFilesPack { file2 = file }
+                  3 -> encFilesPack { file3 = file }
+                  4 -> encFilesPack { file4 = file }
+                  5 -> encFilesPack { file5 = file }
+
+
+getEncFileFromDataState :: DataState -> Int -> File
+getEncFileFromDataState state 1 = file1 $ enc state
+getEncFileFromDataState state 2 = file2 $ enc state
+getEncFileFromDataState state 3 = file3 $ enc state
+getEncFileFromDataState state 4 = file4 $ enc state
+getEncFileFromDataState state 5 = file5 $ enc state
 
 
 buildEncAddButtons :: Builder -> IO ButtonsPack

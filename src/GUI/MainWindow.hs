@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module GUI.MainWindow
   ( mainWindow
   ) where
@@ -6,16 +7,18 @@ import Data.IORef
 import Control.Monad.Trans
 import Graphics.UI.Gtk
 
+
 import GUI.Utils
 import GUI.DecryptedObjectsActions
 import GUI.EncryptedObjectsActions
 import GUI.IntermediateWindowsActions
 
-
 mainWindow :: IO()
 mainWindow = do
   initGUI
+
   state <- newIORef startDataState
+  position <- newIORef 0
 
   builder <- builderNew
   builderAddFromFile builder "assets/glade/windows.glade"
@@ -34,7 +37,7 @@ mainWindow = do
 
   dFileChooser <- getFCDialog builder "file_chooser"
   dFileChooserCancel <- getButton builder "file_chooser_box_buttons_cancel"
-  dFileChooserChoose <- getButton builder "file_chooser_box_buttons_choose"
+  dFileChooserApply <- getButton builder "file_chooser_box_buttons_apply"
 
 
   dPassword <- getDialog builder "password"
@@ -42,35 +45,35 @@ mainWindow = do
   dPasswordStart <- getButton builder "password_box_buttons_start"
   dPasswordInputEntry <- getEntry builder "password_box_input_entry"
   dPasswordRepeatEntry <- getEntry builder "password_box_repeat_entry"
-  
-  
-  
-  -- TODO need update for entry (look example in trello)
+  dPasswordLabel <- getLabel builder "password_box_buttons_label"
+
+
   onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser
   onFileSaveCancelButtonClick dFileSaveCancel dFileSave
-  onFileSaveNextButtonClick dFileSaveNext dFileSaveEntry dPassword
+  onFileSaveNextButtonClick state position dFileSaveNext dFileSaveEntry dFileSave dPassword
 
+  onFileChooserCancelClick dFileChooserCancel dFileChooser
+  onFileChooserApplyClick dFileChooserApply dFileChooser dFileSaveEntry
+
+  onPasswordCancelClick dPasswordCancel dPassword
+  onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
+  onPasswordStartClick state position dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
 
   decBuilder <- builderNew
   builderAddFromFile decBuilder "assets/glade/decrypted_boxes.glade"
 
   decAddButtonsPack <- buildDecAddButtons builder
-
   decFileBoxesPack <- buildDecFileBoxes decBuilder
-
   decTrashButtonsPack <- buildDecTrashButtons decBuilder
-
   decFCButtonsPack <- buildDecFCButtons decBuilder
-
   decArrowButtonsPack <- buildDecArrowButtons decBuilder
 
   onDecAddButtonsClick decTable decAddButtonsPack decFileBoxesPack
-  
   onDecTrashButtonsClick decTable decTrashButtonsPack decFileBoxesPack decAddButtonsPack
-
   onDecFCButtonsClick state decFCButtonsPack
+  onDecArrowButtonsClick state position dFileSave dFileSaveEntry decArrowButtonsPack
 
-  onDecArrowButtonsClick state dFileSave dFileSaveEntry decArrowButtonsPack
+
 
 
   encBuilder <- builderNew
@@ -90,5 +93,7 @@ mainWindow = do
   widgetShowAll window
 
   on window deleteEvent $ liftIO mainQuit >> return False
+
+
 
   mainGUI

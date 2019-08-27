@@ -23,7 +23,9 @@ prettyPrint words8 = concatMap (`showHex` " ") . B.unpack $ B.pack words8
 main :: IO ()
 main = mainWindow
   {-input <- B.readFile "input.txt"
-  password <- B.readFile "password.txt"
-  let passHash = passwordHash password
-  let ans = unionBlocks $ decrypt (encrypt (splitByBlocks input) passHash) passHash
-  B.writeFile "out.txt" ans-}
+  passHash <- passwordHash "hello"
+  B.writeFile "out.txt" $ unionBlocks (encrypt (splitByBlocks input) passHash)-}
+  {-readDecryptWrite "input.ts" "input2.txt" "glamozda"-}
+  {-input <- B.readFile "input.ts"
+  passHash <- passwordHash "glamozda"
+  B.writeFile "input2.txt" $ unionBlocks (readDecryptWrite (splitByBlocks input) passHash)-}

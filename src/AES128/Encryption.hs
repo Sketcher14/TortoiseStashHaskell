@@ -1,5 +1,5 @@
 module AES128.Encryption
-  ( encrypt
+  ( readEncryptWrite
   ) where
 
 import           AES128.ExpandedKey
@@ -9,6 +9,7 @@ import           Control.Monad.State.Lazy
 import           Data.Bits                (xor)
 import           Data.List
 import           Data.Word
+import qualified Data.ByteString       as B
 
 subWord :: [Word8] -> [Word8]
 subWord = map subByte
@@ -42,9 +43,7 @@ finalRoundEncrypt :: AESState -> Key -> AESState
 finalRoundEncrypt state = addRoundKey (shiftRows $ subBytes state)
 
 encryptStateful :: Int -> AESState -> State [Key] AESState
-encryptStateful 1 state = do
-  subKey <- popSubKey
-  return $ finalRoundEncrypt state subKey
+encryptStateful 1 state = finalRoundEncrypt state <$> popSubKey
 encryptStateful n state = do
   subKey <- popSubKey
   encryptStateful (n - 1) $ roundEncrypt state subKey
@@ -56,4 +55,11 @@ encryptBlock block key = stateToBlock $ evalState stateMonad $ generateExpandedK
     stateMonad = encryptStateful amountRounds $ addRoundKey aesState key
 
 encrypt :: [Block] -> Key -> [Block]
-encrypt blocks key = map (\bl -> encryptBlock bl key) blocks
+encrypt blocks key = map (`encryptBlock` key) blocks
+
+
+readEncryptWrite :: String -> String -> String -> IO ()
+readEncryptWrite decPath encPath password = do
+  input <- B.readFile decPath
+  passwordHash <- passwordHash password
+  B.writeFile encPath $ unionBlocks $ encrypt (splitByBlocks input) passwordHash

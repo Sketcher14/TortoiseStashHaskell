@@ -1,5 +1,5 @@
 module AES128.Decryption
-  ( decrypt
+  ( readDecryptWrite
   ) where
 
 import           AES128.ExpandedKey
@@ -9,6 +9,7 @@ import           Control.Monad.State.Lazy
 import           Data.Bits                (xor)
 import           Data.List
 import           Data.Word
+import qualified Data.ByteString       as B
 
 invSubWord :: [Word8] -> [Word8]
 invSubWord = map invSubByte
@@ -60,4 +61,10 @@ decryptBlock block key = stateToBlock $ addRoundKey (evalState stateMonad revers
     stateMonad = decryptStateful amountRounds aesState
 
 decrypt :: [Block] -> Key -> [Block]
-decrypt blocks key = map (\bl -> decryptBlock bl key) blocks
+decrypt blocks key = map (`decryptBlock` key) blocks
+
+readDecryptWrite :: String -> String -> String -> IO ()
+readDecryptWrite encPath decPath password = do
+  input <- B.readFile encPath
+  passwordHash <- passwordHash password
+  B.writeFile decPath $ unionBlocks $ decrypt (splitByBlocks input) passwordHash

@@ -22,6 +22,7 @@ import qualified Data.ByteString          as B
 import           Data.List
 import           Data.List.Split          (chunksOf)
 import           Data.Word
+import qualified Data.ByteString.UTF8 as BSU
 
 newtype Block =
   Block [Word8]
@@ -64,12 +65,12 @@ blockToState (Block block) = AESState first second third fourth
 stateToBlock :: AESState -> Block
 stateToBlock (AESState w0 w1 w2 w3) = Block (w0 ++ w1 ++ w2 ++ w3)
 
-passwordHash :: B.ByteString -> Key
-passwordHash pass = Key128 (B.unpack $ MD5.hash pass)
+passwordHash :: String -> IO Key
+passwordHash pass = return (Key128 (B.unpack $ MD5.hash $ BSU.fromString pass))
 
 blockAdditionPKCS7 :: Block -> Block
 blockAdditionPKCS7 bl@(Block bytes) =
-  if (blockLen == blockSize)
+  if blockLen == blockSize
     then bl
     else Block (bytes ++ replicate amountAddBytes (fromIntegral amountAddBytes))
   where
@@ -79,7 +80,7 @@ blockAdditionPKCS7 bl@(Block bytes) =
 splitByBlocks :: B.ByteString -> [Block]
 splitByBlocks input = blocks ++ [blockAdditionPKCS7 last]
   where
-    (last:blocks) = reverse $ map (\el -> Block el) $ chunksOf blockSize $ B.unpack input
+    (last:blocks) = reverse $ map Block $ chunksOf blockSize $ B.unpack input
 
 
 removeBlockAdditionPKCS7 :: Block -> Block
@@ -91,6 +92,6 @@ removeBlockAdditionPKCS7 bl@(Block bytes) =
     lastByte = fromIntegral $ last bytes
 
 unionBlocks :: [Block] -> B.ByteString
-unionBlocks inputBlocks = B.pack $ concat $ map (\(Block bytes) -> bytes) (blocks ++ [removeBlockAdditionPKCS7 last])
+unionBlocks inputBlocks = B.pack $ concatMap (\(Block bytes) -> bytes) (blocks ++ [removeBlockAdditionPKCS7 last])
   where
     (last:blocks) = reverse inputBlocks

@@ -1,5 +1,6 @@
 module GUI.Utils
   ( File(..)
+  , FilesPack(..)
   , DataState(..)
   , parseFullPath
   , emptyFile
@@ -11,19 +12,21 @@ module GUI.Utils
   , getEntry
   , getDialog
   , getFCDialog
+  , getLabel
   , startDataState
-  , updateDataState
   , ButtonsPack(..)
   , BoxesPack(..)
   , FCButtonsPack(..)
-  , getFileFromDataState
   , createFullPath
+  , extension
   )
 where
 
 
 import Data.List
 import Data.Maybe
+import Control.Concurrent (forkIO,  forkOS, threadDelay)
+import Control.Monad (forever)
 
 import Graphics.UI.Gtk
 
@@ -31,23 +34,38 @@ import Graphics.UI.Gtk
 data File = File
   { name :: String
   , path :: String
-  }
-  deriving (Show)
+  } deriving (Show)
 
-data DataState = DataState
+data FilesPack = FilesPack
   { file1 :: File
   , file2 :: File
   , file3 :: File
   , file4 :: File
   , file5 :: File
-  } deriving (Show) 
+  } deriving (Show)
 
-emptyFile :: File
-emptyFile = File { name = "", path = "" }
+data DataState = DataState
+  { dec :: FilesPack
+  , enc :: FilesPack
+  } deriving (Show)
 
 extension :: String
 extension = "ts"
 
+emptyFile :: File
+emptyFile = File { name = "", path = "" }
+
+emptyFilesPack :: FilesPack
+emptyFilesPack = FilesPack
+  { file1 = emptyFile
+  , file2 = emptyFile
+  , file3 = emptyFile
+  , file4 = emptyFile
+  , file5 = emptyFile
+  }
+
+startDataState :: DataState
+startDataState = DataState { dec = emptyFilesPack, enc = emptyFilesPack }
 
 parseFullPath :: Maybe String -> File
 parseFullPath Nothing = emptyFile
@@ -58,33 +76,8 @@ parseFullPath (Just fullPath) = File { name = newName, path = newPath }
     newPath = take index fullPath
 
 
-startDataState :: DataState
-startDataState = DataState
-  { file1 = emptyFile
-  , file2 = emptyFile
-  , file3 = emptyFile
-  , file4 = emptyFile
-  , file5 = emptyFile
-  }
-
-updateDataState :: DataState -> Int -> File -> DataState
-updateDataState state 1 file = state { file1 = file }
-updateDataState state 2 file = state { file2 = file }
-updateDataState state 3 file = state { file3 = file }
-updateDataState state 4 file = state { file4 = file }
-updateDataState state 5 file = state { file5 = file }
--- updateDataState state another???? file
-
-getFileFromDataState :: DataState -> Int -> File
-getFileFromDataState state 1 = file1 state
-getFileFromDataState state 2 = file2 state
-getFileFromDataState state 3 = file3 state
-getFileFromDataState state 4 = file4 state
-getFileFromDataState state 5 = file5 state
-
-
 createFullPath :: File -> String
-createFullPath File { name = name, path = path } = path ++ "/" ++ name ++ "." ++ extension
+createFullPath File { name = name, path = path } = path ++ "/" ++ name
 
 
 replaceButtonOnBoxInBox :: Box -> Button -> Box -> IO ()
@@ -144,3 +137,6 @@ getDialog builder = builderGetObject builder castToDialog
 
 getFCDialog :: Builder -> String -> IO FileChooserDialog
 getFCDialog builder = builderGetObject builder castToFileChooserDialog
+
+getLabel :: Builder -> String -> IO Label
+getLabel builder = builderGetObject builder castToLabel

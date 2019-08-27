@@ -409,8 +409,8 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="file_chooser_box_buttons_choose">
-                <property name="label" translatable="yes">Choose</property>
+              <object class="GtkButton" id="file_chooser_box_buttons_apply">
+                <property name="label" translatable="yes">Apply</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
@@ -437,7 +437,6 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Tortoise Stash</property>
     <property name="resizable">False</property>
-    <property name="modal">True</property>
     <property name="window_position">center</property>
     <property name="type_hint">dialog</property>
     <child>
@@ -513,6 +512,8 @@
                   <object class="GtkEntry" id="file_save_box_entry">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="margin_left">6</property>
+                    <property name="margin_right">5</property>
                     <property name="margin_top">4</property>
                     <property name="margin_bottom">4</property>
                   </object>
@@ -529,6 +530,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="margin_right">6</property>
                     <property name="margin_top">4</property>
                     <property name="margin_bottom">4</property>
                   </object>
@@ -561,7 +563,6 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Tortoise Stash</property>
     <property name="resizable">False</property>
-    <property name="modal">True</property>
     <property name="type_hint">dialog</property>
     <child>
       <placeholder/>
@@ -573,8 +574,23 @@
         <property name="spacing">2</property>
         <child internal-child="action_area">
           <object class="GtkButtonBox">
+            <property name="width_request">505</property>
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
+            <child>
+              <object class="GtkLabel" id="password_box_buttons_label">
+                <property name="width_request">305</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">start</property>
+                <property name="xalign">0.69999998807907104</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
             <child>
               <object class="GtkButton" id="password_box_buttons_cancel">
                 <property name="label" translatable="yes">Cancel</property>
@@ -583,9 +599,9 @@
                 <property name="receives_default">True</property>
               </object>
               <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
@@ -598,7 +614,7 @@
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">2</property>
               </packing>
             </child>
           </object>
@@ -618,6 +634,7 @@
               <object class="GtkLabel" id="password_box_input_label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_top">20</property>
                 <property name="label" translatable="yes">Input password:</property>
                 <attributes>
                   <attribute name="scale" value="2"/>
@@ -633,8 +650,9 @@
               <object class="GtkEntry" id="password_box_input_entry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="margin_top">12</property>
-                <property name="margin_bottom">12</property>
+                <property name="margin_left">96</property>
+                <property name="margin_right">96</property>
+                <property name="margin_top">24</property>
                 <property name="visibility">False</property>
                 <property name="invisible_char">•</property>
                 <property name="max_width_chars">20</property>
@@ -649,6 +667,7 @@
               <object class="GtkLabel" id="password_box_repeat_label">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="margin_top">20</property>
                 <property name="label" translatable="yes">Repeat password:</property>
                 <attributes>
                   <attribute name="scale" value="2"/>
@@ -664,8 +683,9 @@
               <object class="GtkEntry" id="password_box_repeat_entry">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="margin_top">12</property>
-                <property name="margin_bottom">12</property>
+                <property name="margin_left">96</property>
+                <property name="margin_right">96</property>
+                <property name="margin_top">24</property>
                 <property name="visibility">False</property>
                 <property name="max_width_chars">20</property>
               </object>

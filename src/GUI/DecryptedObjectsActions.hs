@@ -1,5 +1,7 @@
 module GUI.DecryptedObjectsActions
-  ( buildDecAddButtons
+  ( updateDecDataState
+  , getDecFileFromDataState
+  , buildDecAddButtons
   , buildDecFileBoxes
   , buildDecTrashButtons
   , buildDecFCButtons
@@ -14,6 +16,26 @@ import GUI.Utils
 
 import Graphics.UI.Gtk
 import Data.IORef
+
+
+updateDecDataState :: DataState -> Int -> File -> DataState
+updateDecDataState state id file = state { dec = filesPack }
+  where
+    decFilesPack = dec state
+    filesPack = case id of
+                  1 -> decFilesPack { file1 = file }
+                  2 -> decFilesPack { file2 = file }
+                  3 -> decFilesPack { file3 = file }
+                  4 -> decFilesPack { file4 = file }
+                  5 -> decFilesPack { file5 = file }
+
+
+getDecFileFromDataState :: DataState -> Int -> File
+getDecFileFromDataState state 1 = file1 $ dec state
+getDecFileFromDataState state 2 = file2 $ dec state
+getDecFileFromDataState state 3 = file3 $ dec state
+getDecFileFromDataState state 4 = file4 $ dec state
+getDecFileFromDataState state 5 = file5 $ dec state
 
 
 buildDecAddButtons :: Builder -> IO ButtonsPack
@@ -113,38 +135,41 @@ onDecTrashButtonsClick
 
 
 onFCButtonClick :: IORef DataState -> Int -> FileChooserButton -> IO ()
-onFCButtonClick state id fcButton = do
+onFCButtonClick refState id fcButton = do
+  -- TODO error handling
   mbFilename <- fileChooserGetFilename fcButton
-  curState <- readIORef state
-  writeIORef state $ updateDataState curState id $ parseFullPath mbFilename
+  state <- readIORef refState
+  writeIORef refState $ updateDecDataState state id $ parseFullPath mbFilename
 
 onDecFCButtonsClick :: IORef DataState -> FCButtonsPack -> IO ()
 onDecFCButtonsClick
-  state
+  refState
   FCButtonsPack { fcBut1 = fcBut1, fcBut2 = fcBut2, fcBut3 = fcBut3, fcBut4 = fcBut4, fcBut5 = fcBut5 } = do
-  on fcBut1 fileChooserButtonFileSet $ onFCButtonClick state 1 fcBut1
-  on fcBut2 fileChooserButtonFileSet $ onFCButtonClick state 2 fcBut2
-  on fcBut3 fileChooserButtonFileSet $ onFCButtonClick state 3 fcBut3
-  on fcBut4 fileChooserButtonFileSet $ onFCButtonClick state 4 fcBut4
-  on fcBut5 fileChooserButtonFileSet $ onFCButtonClick state 5 fcBut5
+  on fcBut1 fileChooserButtonFileSet $ onFCButtonClick refState 1 fcBut1
+  on fcBut2 fileChooserButtonFileSet $ onFCButtonClick refState 2 fcBut2
+  on fcBut3 fileChooserButtonFileSet $ onFCButtonClick refState 3 fcBut3
+  on fcBut4 fileChooserButtonFileSet $ onFCButtonClick refState 4 fcBut4
+  on fcBut5 fileChooserButtonFileSet $ onFCButtonClick refState 5 fcBut5
   return ()
 
-onArrowButtonClick :: IORef DataState -> Int -> Dialog -> Entry -> IO ()
-onArrowButtonClick state id fileSaveWindow fileSaveWindowEntry = do
-    curState <- readIORef state
-    entrySetText fileSaveWindowEntry $ createFullPath $ getFileFromDataState curState id
-    widgetShowAll fileSaveWindow
+onArrowButtonClick :: IORef DataState -> IORef Int -> Int -> Dialog -> Entry -> IO ()
+onArrowButtonClick refState position id dFileSave dFileSaveEntry = do
+    writeIORef position id
+    state <- readIORef refState
+    entrySetText dFileSaveEntry $ createFullPath (getDecFileFromDataState state id) ++ "." ++ extension
+    widgetShowAll dFileSave
 
-onDecArrowButtonsClick :: IORef DataState -> Dialog -> Entry -> ButtonsPack -> IO ()
+onDecArrowButtonsClick :: IORef DataState -> IORef Int -> Dialog -> Entry -> ButtonsPack -> IO ()
 onDecArrowButtonsClick
-  state
-  fileSaveWindow
-  fileSaveWindowEntry
+  refState
+  position
+  dFileSave
+  dFileSaveEntry
   ButtonsPack { but1 = arrowBut1, but2 = arrowBut2, but3 = arrowBut3, but4 = arrowBut4, but5 = arrowBut5 } = do
-  -- TODO check empty state
-  on arrowBut1 buttonActivated $ onArrowButtonClick state 1 fileSaveWindow fileSaveWindowEntry
-  on arrowBut2 buttonActivated $ onArrowButtonClick state 2 fileSaveWindow fileSaveWindowEntry
-  on arrowBut3 buttonActivated $ onArrowButtonClick state 3 fileSaveWindow fileSaveWindowEntry
-  on arrowBut4 buttonActivated $ onArrowButtonClick state 4 fileSaveWindow fileSaveWindowEntry
-  on arrowBut5 buttonActivated $ onArrowButtonClick state 5 fileSaveWindow fileSaveWindowEntry
+  -- TODO check empty refState
+  on arrowBut1 buttonActivated $ onArrowButtonClick refState position 1 dFileSave dFileSaveEntry
+  on arrowBut2 buttonActivated $ onArrowButtonClick refState position 2 dFileSave dFileSaveEntry
+  on arrowBut3 buttonActivated $ onArrowButtonClick refState position 3 dFileSave dFileSaveEntry
+  on arrowBut4 buttonActivated $ onArrowButtonClick refState position 4 dFileSave dFileSaveEntry
+  on arrowBut5 buttonActivated $ onArrowButtonClick refState position 5 dFileSave dFileSaveEntry
   return ()
