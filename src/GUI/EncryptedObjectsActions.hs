@@ -5,11 +5,17 @@ module GUI.EncryptedObjectsActions
   , buildEncFileBoxes
   , buildEncTrashButtons
   , buildEncFCButtons
-  , buildEncArrowButtons 
+  , buildEncArrowButtons
+  , onEncAddButtonsClick
+  , onEncTrashButtonsClick
+  , onEncFCButtonsClick
+  , onEncArrowButtonsClick
+  , onEncPasswordStartClick
   ) where
 
 
 import GUI.Utils
+import AES128.Decryption
 
 import Graphics.UI.Gtk
 import Data.IORef
@@ -105,4 +111,90 @@ buildEncArrowButtons builder = do
                      , but5 = encArrowButton5
                      }
 
+onEncAddButtonsClick :: Box -> ButtonsPack -> BoxesPack -> IO () -- common
+onEncAddButtonsClick
+  encTable
+  ButtonsPack { but1 = but1, but2 = but2, but3 = but3, but4 = but4, but5 = but5 }
+  BoxesPack { box1 = box1, box2 = box2, box3 = box3, box4 = box4, box5 = box5 } = do
+  on but1 buttonActivated $ replaceButtonOnBoxInBox encTable but1 box1
+  on but2 buttonActivated $ replaceButtonOnBoxInBox encTable but2 box2
+  on but3 buttonActivated $ replaceButtonOnBoxInBox encTable but3 box3
+  on but4 buttonActivated $ replaceButtonOnBoxInBox encTable but4 box4
+  on but5 buttonActivated $ replaceButtonOnBoxInBox encTable but5 box5
+  return ()
 
+onEncTrashButtonsClick :: Box -> ButtonsPack -> BoxesPack -> ButtonsPack -> IO () -- common
+onEncTrashButtonsClick
+  encTable
+  ButtonsPack { but1 = trashBut1, but2 = trashBut2, but3 = trashBut3, but4 = trashBut4, but5 = trashBut5 }
+  BoxesPack { box1 = box1, box2 = box2, box3 = box3, box4 = box4, box5 = box5 }
+  ButtonsPack { but1 = addBut1, but2 = addBut2, but3 = addBut3, but4 = addBut4, but5 = addBut5 } = do
+  on trashBut1 buttonActivated $ replaceBoxOnButtonInBox encTable box1 addBut1
+  on trashBut2 buttonActivated $ replaceBoxOnButtonInBox encTable box2 addBut2
+  on trashBut3 buttonActivated $ replaceBoxOnButtonInBox encTable box3 addBut3
+  on trashBut4 buttonActivated $ replaceBoxOnButtonInBox encTable box4 addBut4
+  on trashBut5 buttonActivated $ replaceBoxOnButtonInBox encTable box5 addBut5
+  return ()
+
+onFCButtonClick :: IORef DataState -> Int -> FileChooserButton -> IO () -- common
+onFCButtonClick refState id fcButton = do
+  mbFileName <- fileChooserGetFilename fcButton
+  state <- readIORef refState
+  writeIORef refState $ updateEncDataState state id $ parseFullPath mbFileName
+
+onEncFCButtonsClick :: IORef DataState -> FCButtonsPack -> IO () -- common
+onEncFCButtonsClick
+  refState
+  FCButtonsPack { fcBut1 = fcBut1, fcBut2 = fcBut2, fcBut3 = fcBut3, fcBut4 = fcBut4, fcBut5 = fcBut5 } = do
+  on fcBut1 fileChooserButtonFileSet $ onFCButtonClick refState 1 fcBut1
+  on fcBut2 fileChooserButtonFileSet $ onFCButtonClick refState 2 fcBut2
+  on fcBut3 fileChooserButtonFileSet $ onFCButtonClick refState 3 fcBut3
+  on fcBut4 fileChooserButtonFileSet $ onFCButtonClick refState 4 fcBut4
+  on fcBut5 fileChooserButtonFileSet $ onFCButtonClick refState 5 fcBut5
+  return ()
+
+onArrowButtonClick :: IORef DataState -> IORef CurrentArrow -> Int -> Dialog -> Entry -> IO () -- common
+onArrowButtonClick refState refCurrentArrow id dFileSave dFileSaveEntry = do
+    writeIORef refCurrentArrow CurrentArrow { position = id, isEncryption = False }
+    state <- readIORef refState
+    entrySetText dFileSaveEntry $ createFullPath (getEncFileFromDataState state id) -- ++ "." ++ extension
+    widgetShowAll dFileSave
+
+onEncArrowButtonsClick :: IORef DataState -> IORef CurrentArrow -> Dialog -> Entry -> ButtonsPack -> IO ()
+onEncArrowButtonsClick
+  refState
+  refCurrentArrow
+  dFileSave
+  dFileSaveEntry
+  ButtonsPack { but1 = arrowBut1, but2 = arrowBut2, but3 = arrowBut3, but4 = arrowBut4, but5 = arrowBut5 } = do
+  on arrowBut1 buttonActivated $ onArrowButtonClick refState refCurrentArrow 1 dFileSave dFileSaveEntry
+  on arrowBut2 buttonActivated $ onArrowButtonClick refState refCurrentArrow 2 dFileSave dFileSaveEntry
+  on arrowBut3 buttonActivated $ onArrowButtonClick refState refCurrentArrow 3 dFileSave dFileSaveEntry
+  on arrowBut4 buttonActivated $ onArrowButtonClick refState refCurrentArrow 4 dFileSave dFileSaveEntry
+  on arrowBut5 buttonActivated $ onArrowButtonClick refState refCurrentArrow 5 dFileSave dFileSaveEntry
+  return ()
+
+passwordStartClick :: IORef DataState -> IORef CurrentArrow
+  -> Button -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> IO ()
+passwordStartClick refState refCurrentArrow dPasswordStart encTable encAddButtons encFileBoxes encFCButtons = do
+  state <- readIORef refState
+  currentArrow <- readIORef refCurrentArrow
+  encAddButton <- getButtonFromPack encAddButtons $ position currentArrow
+  encFileBox <- getBoxFromPack encFileBoxes $ position currentArrow
+  encFCButton <- getFCButtonFromPack encFCButtons $ position currentArrow
+  if isEncryption currentArrow
+    then do
+      fileChooserSetFilename encFCButton $ createFullPath $ getEncFileFromDataState state $ position currentArrow
+      replaceButtonOnBoxInBox encTable encAddButton encFileBox
+    else do
+      fileChooserSetFilename encFCButton "(No)"
+      writeIORef refState $ updateEncDataState state (position currentArrow) emptyFile
+      replaceBoxOnButtonInBox encTable encFileBox encAddButton
+
+
+onEncPasswordStartClick :: IORef DataState -> IORef CurrentArrow
+  -> Button -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> IO ()
+onEncPasswordStartClick refState refCurrentArrow dPasswordStart encTable encAddButtons encFileBoxes encFCButtons = do
+  on dPasswordStart buttonActivated $
+    passwordStartClick refState refCurrentArrow dPasswordStart encTable encAddButtons encFileBoxes encFCButtons
+  return ()

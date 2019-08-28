@@ -18,7 +18,7 @@ mainWindow = do
   initGUI
 
   state <- newIORef startDataState
-  position <- newIORef 0
+  currentArrow <- newIORef CurrentArrow { position = 0, isEncryption = False }
 
   builder <- builderNew
   builderAddFromFile builder "assets/glade/windows.glade"
@@ -34,11 +34,9 @@ mainWindow = do
   dFileSaveBrowse <- getButton builder "file_save_box_chooser"
   dFileSaveEntry <- getEntry builder "file_save_box_entry"
 
-
   dFileChooser <- getFCDialog builder "file_chooser"
   dFileChooserCancel <- getButton builder "file_chooser_box_buttons_cancel"
   dFileChooserApply <- getButton builder "file_chooser_box_buttons_apply"
-
 
   dPassword <- getDialog builder "password"
   dPasswordCancel <- getButton builder "password_box_buttons_cancel"
@@ -48,16 +46,16 @@ mainWindow = do
   dPasswordLabel <- getLabel builder "password_box_buttons_label"
 
 
-  onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser
   onFileSaveCancelButtonClick dFileSaveCancel dFileSave
-  onFileSaveNextButtonClick state position dFileSaveNext dFileSaveEntry dFileSave dPassword
+  onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser
+  onFileSaveNextButtonClick state currentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword
 
   onFileChooserCancelClick dFileChooserCancel dFileChooser
   onFileChooserApplyClick dFileChooserApply dFileChooser dFileSaveEntry
 
   onPasswordCancelClick dPasswordCancel dPassword
   onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
-  onPasswordStartClick state position dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
+  onPasswordStartClick state currentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
 
   decBuilder <- builderNew
   builderAddFromFile decBuilder "assets/glade/decrypted_boxes.glade"
@@ -71,29 +69,27 @@ mainWindow = do
   onDecAddButtonsClick decTable decAddButtonsPack decFileBoxesPack
   onDecTrashButtonsClick decTable decTrashButtonsPack decFileBoxesPack decAddButtonsPack
   onDecFCButtonsClick state decFCButtonsPack
-  onDecArrowButtonsClick state position dFileSave dFileSaveEntry decArrowButtonsPack
-
-
+  onDecArrowButtonsClick state currentArrow dFileSave dFileSaveEntry decArrowButtonsPack
+  onDecPasswordStartClick state currentArrow dPasswordStart decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
 
 
   encBuilder <- builderNew
   builderAddFromFile encBuilder "assets/glade/encrypted_boxes.glade"
   
   encAddButtonsPack <- buildEncAddButtons builder
-  
   encFileBoxesPack <- buildEncFileBoxes encBuilder
-  
   encTrashButtonsPack <- buildEncTrashButtons encBuilder
-  
   encFCButtonsPack <- buildEncFCButtons encBuilder
-  
   encArrowButtonsPack <- buildEncArrowButtons encBuilder
   
+  onEncAddButtonsClick encTable encAddButtonsPack encFileBoxesPack
+  onEncTrashButtonsClick encTable encTrashButtonsPack encFileBoxesPack encAddButtonsPack
+  onEncFCButtonsClick state encFCButtonsPack
+  onEncArrowButtonsClick state currentArrow dFileSave dFileSaveEntry encArrowButtonsPack
+  onEncPasswordStartClick state currentArrow dPasswordStart encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack
 
   widgetShowAll window
 
   on window deleteEvent $ liftIO mainQuit >> return False
-
-
 
   mainGUI

@@ -2,6 +2,7 @@ module GUI.Utils
   ( File(..)
   , FilesPack(..)
   , DataState(..)
+  , CurrentArrow(..)
   , parseFullPath
   , emptyFile
   , replaceBoxOnButtonInBox
@@ -17,6 +18,9 @@ module GUI.Utils
   , ButtonsPack(..)
   , BoxesPack(..)
   , FCButtonsPack(..)
+  , getButtonFromPack
+  , getBoxFromPack
+  , getFCButtonFromPack
   , createFullPath
   , extension
   )
@@ -25,7 +29,6 @@ where
 
 import Data.List
 import Data.Maybe
-import Control.Concurrent (forkIO,  forkOS, threadDelay)
 import Control.Monad (forever)
 
 import Graphics.UI.Gtk
@@ -49,8 +52,14 @@ data DataState = DataState
   , enc :: FilesPack
   } deriving (Show)
 
+
+data CurrentArrow = CurrentArrow
+  { position :: Int
+  , isEncryption :: Bool
+  } deriving (Show)
+
 extension :: String
-extension = "ts"
+extension = "TTS"
 
 emptyFile :: File
 emptyFile = File { name = "", path = "" }
@@ -82,10 +91,10 @@ createFullPath File { name = name, path = path } = path ++ "/" ++ name
 
 replaceButtonOnBoxInBox :: Box -> Button -> Box -> IO ()
 replaceButtonOnBoxInBox parent old new = do
-  position <- get parent $ boxChildPosition old
+  pos <- get parent $ boxChildPosition old
   containerRemove parent old
   containerAdd parent new
-  boxReorderChild parent new position
+  boxReorderChild parent new pos
 
 replaceBoxOnButtonInBox :: Box -> Box -> Button -> IO ()
 replaceBoxOnButtonInBox parent old new = do
@@ -140,3 +149,26 @@ getFCDialog builder = builderGetObject builder castToFileChooserDialog
 
 getLabel :: Builder -> String -> IO Label
 getLabel builder = builderGetObject builder castToLabel
+
+
+getButtonFromPack :: ButtonsPack -> Int -> IO Button
+getButtonFromPack buttonsPack 1 = return $ but1 buttonsPack
+getButtonFromPack buttonsPack 2 = return $ but2 buttonsPack
+getButtonFromPack buttonsPack 3 = return $ but3 buttonsPack
+getButtonFromPack buttonsPack 4 = return $ but4 buttonsPack
+getButtonFromPack buttonsPack 5 = return $ but5 buttonsPack
+
+
+getBoxFromPack :: BoxesPack -> Int -> IO Box
+getBoxFromPack boxesPack 1 = return $ box1 boxesPack
+getBoxFromPack boxesPack 2 = return $ box2 boxesPack
+getBoxFromPack boxesPack 3 = return $ box3 boxesPack
+getBoxFromPack boxesPack 4 = return $ box4 boxesPack
+getBoxFromPack boxesPack 5 = return $ box5 boxesPack
+
+getFCButtonFromPack :: FCButtonsPack -> Int -> IO FileChooserButton
+getFCButtonFromPack fcButtonsPack 1 = return $ fcBut1 fcButtonsPack
+getFCButtonFromPack fcButtonsPack 2 = return $ fcBut2 fcButtonsPack
+getFCButtonFromPack fcButtonsPack 3 = return $ fcBut3 fcButtonsPack
+getFCButtonFromPack fcButtonsPack 4 = return $ fcBut4 fcButtonsPack
+getFCButtonFromPack fcButtonsPack 5 = return $ fcBut5 fcButtonsPack

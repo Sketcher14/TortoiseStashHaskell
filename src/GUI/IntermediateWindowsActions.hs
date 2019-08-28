@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module GUI.IntermediateWindowsActions
-  ( onFileSaveBrowseButtonClick
-  , onFileSaveCancelButtonClick
+  ( onFileSaveCancelButtonClick
+  , onFileSaveBrowseButtonClick
   , onFileSaveNextButtonClick
   , onFileChooserCancelClick
   , onFileChooserApplyClick
@@ -31,13 +31,15 @@ onFileSaveCancelButtonClick dFileSaveCancel dFileSave = do
   on dFileSaveCancel buttonActivated $ widgetHide dFileSave
   return ()
 
-onFileSaveNextButtonClick :: IORef DataState -> IORef Int -> Button -> Entry -> Dialog -> Dialog -> IO ()
-onFileSaveNextButtonClick refState position dFileSaveNext dFileSaveEntry dFileSave dPassword = do
+onFileSaveNextButtonClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Dialog -> Dialog -> IO ()
+onFileSaveNextButtonClick refState refCurrentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword = do
     on dFileSaveNext buttonActivated $ do 
       fullPath::String <- entryGetText dFileSaveEntry
-      pos <- readIORef position
       state <- readIORef refState
-      writeIORef refState $ updateEncDataState state pos $ parseFullPath (Just fullPath)
+      currentArrow <- readIORef refCurrentArrow
+      if isEncryption currentArrow
+        then writeIORef refState $ updateEncDataState state (position currentArrow) $ parseFullPath (Just fullPath)
+        else writeIORef refState $ updateDecDataState state (position currentArrow) $ parseFullPath (Just fullPath)
       widgetHide dFileSave
       widgetShowAll dPassword
     return ()
@@ -49,9 +51,8 @@ onFileChooserCancelClick dFileChooserCancel dFileChooser = do
 
 fileChooserApplyClick :: FileChooserDialog -> Entry -> IO ()
 fileChooserApplyClick dFileChooser dFileSaveEntry = do
-  -- TODO error handling
-  (Just filepath)::Maybe String <- fileChooserGetFilename dFileChooser
-  entrySetText dFileSaveEntry $ filepath ++ "." ++ extension
+  (Just filePath)::Maybe String <- fileChooserGetFilename dFileChooser
+  entrySetText dFileSaveEntry $ filePath -- ++ "." ++ extension
   widgetHide dFileChooser
 
 onFileChooserApplyClick :: Button -> FileChooserDialog -> Entry -> IO ()
@@ -61,9 +62,8 @@ onFileChooserApplyClick dFileChooserApply dFileChooser dFileSaveEntry = do
 
 onPasswordCancelClick :: Button -> Dialog -> IO ()
 onPasswordCancelClick dPasswordCancel dPassword = do
-  on dPasswordCancel buttonActivated $ widgetHide dPassword -- reset state????
+  on dPasswordCancel buttonActivated $ widgetHide dPassword
   return ()
-
 
 compareEntriesTexts :: Entry -> Entry -> IO Bool
 compareEntriesTexts entry1 entry2 = do
@@ -88,24 +88,25 @@ onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabe
   return ()
 
 
-passwordStartClick :: IORef DataState -> IORef Int -> Button -> Entry -> Entry -> Dialog -> IO ()
-passwordStartClick refState refPosition dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword = do
+passwordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> IO ()
+passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword = do
   bEqual <- compareEntriesTexts dPasswordInputEntry dPasswordRepeatEntry
   if not bEqual
     then return ()
     else do
       state <- readIORef refState
-      position <- readIORef refPosition
-      let decFullPath = createFullPath $ getDecFileFromDataState state position
-      let encFullPath = createFullPath $ getEncFileFromDataState state position
+      currentArrow <- readIORef refCurrentArrow
+      let decFullPath = createFullPath $ getDecFileFromDataState state $ position currentArrow
+      let encFullPath = createFullPath $ getEncFileFromDataState state $ position currentArrow
       password::String <- entryGetText dPasswordInputEntry
-      readEncryptWrite decFullPath encFullPath password
+      if isEncryption currentArrow
+        then readEncryptWrite decFullPath encFullPath password
+        else readDecryptWrite encFullPath decFullPath password
       widgetHide dPassword
 
 
-onPasswordStartClick :: IORef DataState -> IORef Int -> Button -> Entry -> Entry -> Dialog -> IO ()
-onPasswordStartClick refState position dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword = do
+onPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> IO ()
+onPasswordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword = do
   on dPasswordStart buttonActivated $
-    passwordStartClick refState position dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
+    passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
   return ()
-

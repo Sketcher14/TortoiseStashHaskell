@@ -64,7 +64,7 @@ decrypt :: [Block] -> Key -> [Block]
 decrypt blocks key = map (`decryptBlock` key) blocks
 
 readDecryptWrite :: String -> String -> String -> IO ()
-readDecryptWrite encPath decPath password = do
+readDecryptWrite encPath decPath password = do  
   input <- B.readFile encPath
   passwordHash <- passwordHash password
   B.writeFile decPath $ unionBlocks $ decrypt (splitByBlocks input) passwordHash

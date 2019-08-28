@@ -10,6 +10,7 @@ module GUI.DecryptedObjectsActions
   , onDecTrashButtonsClick
   , onDecFCButtonsClick
   , onDecArrowButtonsClick
+  , onDecPasswordStartClick
   ) where
 
 import GUI.Utils
@@ -136,10 +137,9 @@ onDecTrashButtonsClick
 
 onFCButtonClick :: IORef DataState -> Int -> FileChooserButton -> IO ()
 onFCButtonClick refState id fcButton = do
-  -- TODO error handling
-  mbFilename <- fileChooserGetFilename fcButton
+  mbFileName <- fileChooserGetFilename fcButton
   state <- readIORef refState
-  writeIORef refState $ updateDecDataState state id $ parseFullPath mbFilename
+  writeIORef refState $ updateDecDataState state id $ parseFullPath mbFileName
 
 onDecFCButtonsClick :: IORef DataState -> FCButtonsPack -> IO ()
 onDecFCButtonsClick
@@ -152,24 +152,49 @@ onDecFCButtonsClick
   on fcBut5 fileChooserButtonFileSet $ onFCButtonClick refState 5 fcBut5
   return ()
 
-onArrowButtonClick :: IORef DataState -> IORef Int -> Int -> Dialog -> Entry -> IO ()
-onArrowButtonClick refState position id dFileSave dFileSaveEntry = do
-    writeIORef position id
+onArrowButtonClick :: IORef DataState -> IORef CurrentArrow -> Int -> Dialog -> Entry -> IO ()
+onArrowButtonClick refState refCurrentArrow id dFileSave dFileSaveEntry = do
+    writeIORef refCurrentArrow CurrentArrow { position = id, isEncryption = True }
     state <- readIORef refState
-    entrySetText dFileSaveEntry $ createFullPath (getDecFileFromDataState state id) ++ "." ++ extension
+    entrySetText dFileSaveEntry $ createFullPath (getDecFileFromDataState state id)-- ++ "." ++ extension
     widgetShowAll dFileSave
+    state <- readIORef refState
+    print state
 
-onDecArrowButtonsClick :: IORef DataState -> IORef Int -> Dialog -> Entry -> ButtonsPack -> IO ()
+onDecArrowButtonsClick :: IORef DataState -> IORef CurrentArrow -> Dialog -> Entry -> ButtonsPack -> IO ()
 onDecArrowButtonsClick
   refState
-  position
+  refCurrentArrow
   dFileSave
   dFileSaveEntry
   ButtonsPack { but1 = arrowBut1, but2 = arrowBut2, but3 = arrowBut3, but4 = arrowBut4, but5 = arrowBut5 } = do
-  -- TODO check empty refState
-  on arrowBut1 buttonActivated $ onArrowButtonClick refState position 1 dFileSave dFileSaveEntry
-  on arrowBut2 buttonActivated $ onArrowButtonClick refState position 2 dFileSave dFileSaveEntry
-  on arrowBut3 buttonActivated $ onArrowButtonClick refState position 3 dFileSave dFileSaveEntry
-  on arrowBut4 buttonActivated $ onArrowButtonClick refState position 4 dFileSave dFileSaveEntry
-  on arrowBut5 buttonActivated $ onArrowButtonClick refState position 5 dFileSave dFileSaveEntry
+  on arrowBut1 buttonActivated $ onArrowButtonClick refState refCurrentArrow 1 dFileSave dFileSaveEntry
+  on arrowBut2 buttonActivated $ onArrowButtonClick refState refCurrentArrow 2 dFileSave dFileSaveEntry
+  on arrowBut3 buttonActivated $ onArrowButtonClick refState refCurrentArrow 3 dFileSave dFileSaveEntry
+  on arrowBut4 buttonActivated $ onArrowButtonClick refState refCurrentArrow 4 dFileSave dFileSaveEntry
+  on arrowBut5 buttonActivated $ onArrowButtonClick refState refCurrentArrow 5 dFileSave dFileSaveEntry
+  return ()
+
+passwordStartClick :: IORef DataState -> IORef CurrentArrow
+  -> Button -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> IO ()
+passwordStartClick refState refCurrentArrow dPasswordStart decTable decAddButtons decFileBoxes decFCButtons = do
+  state <- readIORef refState
+  currentArrow <- readIORef refCurrentArrow
+  decAddButton <- getButtonFromPack decAddButtons $ position currentArrow
+  decFileBox <- getBoxFromPack decFileBoxes $ position currentArrow
+  decFCButton <- getFCButtonFromPack decFCButtons $ position currentArrow
+  if isEncryption currentArrow
+    then do
+      fileChooserSetFilename decFCButton "(No)"
+      writeIORef refState $ updateDecDataState state (position currentArrow) emptyFile
+      replaceBoxOnButtonInBox decTable decFileBox decAddButton
+    else do
+      fileChooserSetFilename decFCButton $ createFullPath $ getDecFileFromDataState state $ position currentArrow
+      replaceButtonOnBoxInBox decTable decAddButton decFileBox
+
+onDecPasswordStartClick :: IORef DataState -> IORef CurrentArrow
+  -> Button -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> IO ()
+onDecPasswordStartClick refState refCurrentArrow dPasswordStart decTable decAddButtons decFileBoxes decFCButtons = do
+  on dPasswordStart buttonActivated $
+    passwordStartClick refState refCurrentArrow dPasswordStart decTable decAddButtons decFileBoxes decFCButtons
   return ()
