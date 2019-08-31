@@ -10,7 +10,6 @@ module GUI.IntermediateWindowsActions
   , onPasswordStartClick
   ) where
 
-
 import GUI.Utils
 import GUI.EncryptedObjectsActions
 import GUI.DecryptedObjectsActions
@@ -20,6 +19,7 @@ import AES128.Decryption
 import Graphics.UI.Gtk
 import Data.IORef
 import Control.Monad.Trans
+import Data.Maybe
 
 onFileSaveBrowseButtonClick :: Button -> FileChooserDialog -> IO ()
 onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser = do
@@ -49,15 +49,20 @@ onFileChooserCancelClick dFileChooserCancel dFileChooser = do
   on dFileChooserCancel buttonActivated $ widgetHide dFileChooser
   return ()
 
-fileChooserApplyClick :: FileChooserDialog -> Entry -> IO ()
-fileChooserApplyClick dFileChooser dFileSaveEntry = do
-  (Just filePath)::Maybe String <- fileChooserGetFilename dFileChooser
-  entrySetText dFileSaveEntry $ filePath ++ "." ++ extension
+fileChooserApplyClick :: IORef CurrentArrow -> FileChooserDialog -> Entry -> IO ()
+fileChooserApplyClick refCurrentArrow dFileChooser dFileSaveEntry = do
+  mbFileName <- fileChooserGetFilename dFileChooser
+  currentArrow <- readIORef refCurrentArrow
+  case mbFileName of
+    Nothing -> print "No file is selected, or the selected file can't be represented with a local filename"
+    Just fileName -> if isEncryption currentArrow
+                       then entrySetText dFileSaveEntry $ fileName ++ "." ++ extension
+                       else entrySetText dFileSaveEntry $ removeExtension fileName
   widgetHide dFileChooser
 
-onFileChooserApplyClick :: Button -> FileChooserDialog -> Entry -> IO ()
-onFileChooserApplyClick dFileChooserApply dFileChooser dFileSaveEntry = do
-  on dFileChooserApply buttonActivated $ fileChooserApplyClick dFileChooser dFileSaveEntry
+onFileChooserApplyClick :: IORef CurrentArrow -> Button -> FileChooserDialog -> Entry -> IO ()
+onFileChooserApplyClick refCurrentArrow dFileChooserApply dFileChooser dFileSaveEntry = do
+  on dFileChooserApply buttonActivated $ fileChooserApplyClick refCurrentArrow dFileChooser dFileSaveEntry
   return ()
 
 onPasswordCancelClick :: Button -> Dialog -> IO ()
@@ -78,7 +83,6 @@ passwordEntryReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel = 
     then labelSetText dPasswordLabel "Passwords match"      -- TODO set color
     else labelSetText dPasswordLabel "Passwords doesn't match"
 
-
 onPasswordEntriesReleased :: Entry -> Entry -> Label -> IO ()
 onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel = do
   on dPasswordInputEntry keyReleaseEvent $ tryEvent $ liftIO $
@@ -86,7 +90,6 @@ onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabe
   on dPasswordRepeatEntry keyReleaseEvent $ tryEvent $ liftIO $
     passwordEntryReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
   return ()
-
 
 passwordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> IO ()
 passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword = do
@@ -105,7 +108,6 @@ passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry d
         then readEncryptWrite decFullPath encFullPath password
         else readDecryptWrite encFullPath decFullPath password
       widgetHide dPassword
-
 
 onPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog
   -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack

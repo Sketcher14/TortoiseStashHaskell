@@ -28,6 +28,9 @@ mainWindow = do
   decTable <- getBox builder "main_window_box_table_decrypt"
   encTable <- getBox builder "main_window_box_table_encrypt"
 
+  appFileFilter <- createAppExtensionFileFilter
+  noFilter <- createNoFilterFileFilter
+
   dFileSave <- getDialog builder "file_save"
   dFileSaveCancel <- getButton builder "file_save_buttons_cancel"
   dFileSaveNext <- getButton builder "file_save_buttons_next"
@@ -35,6 +38,8 @@ mainWindow = do
   dFileSaveEntry <- getEntry builder "file_save_box_entry"
 
   dFileChooser <- getFCDialog builder "file_chooser"
+  fileChooserAddFilter dFileChooser noFilter
+  fileChooserAddFilter dFileChooser appFileFilter
   dFileChooserCancel <- getButton builder "file_chooser_box_buttons_cancel"
   dFileChooserApply <- getButton builder "file_chooser_box_buttons_apply"
 
@@ -53,12 +58,14 @@ mainWindow = do
   decFileBoxesPack <- buildDecFileBoxes decBuilder
   decTrashButtonsPack <- buildDecTrashButtons decBuilder
   decFCButtonsPack <- buildDecFCButtons decBuilder
+  addFileFilterToFCPack noFilter decFCButtonsPack
   decArrowButtonsPack <- buildDecArrowButtons decBuilder
+
 
   onDecAddButtonsClick decTable decAddButtonsPack decFileBoxesPack
   onDecTrashButtonsClick state decTable decTrashButtonsPack decFileBoxesPack decAddButtonsPack decFCButtonsPack
   onDecFCButtonsClick state decFCButtonsPack
-  onDecArrowButtonsClick state currentArrow dFileSave dFileSaveEntry decArrowButtonsPack
+  onDecArrowButtonsClick state currentArrow dFileSave dFileSaveEntry dFileChooser noFilter decArrowButtonsPack
 
 
   encBuilder <- builderNew
@@ -73,15 +80,15 @@ mainWindow = do
   onEncAddButtonsClick encTable encAddButtonsPack encFileBoxesPack
   onEncTrashButtonsClick state encTable encTrashButtonsPack encFileBoxesPack encAddButtonsPack encFCButtonsPack
   onEncFCButtonsClick state encFCButtonsPack
-  onEncArrowButtonsClick state currentArrow dFileSave dFileSaveEntry encArrowButtonsPack
-
+  addFileFilterToFCPack appFileFilter encFCButtonsPack
+  onEncArrowButtonsClick state currentArrow dFileSave dFileSaveEntry dFileChooser appFileFilter encArrowButtonsPack
 
   onFileSaveCancelButtonClick dFileSaveCancel dFileSave
   onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser
   onFileSaveNextButtonClick state currentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword
 
   onFileChooserCancelClick dFileChooserCancel dFileChooser
-  onFileChooserApplyClick dFileChooserApply dFileChooser dFileSaveEntry
+  onFileChooserApplyClick currentArrow dFileChooserApply dFileChooser dFileSaveEntry
 
   onPasswordCancelClick dPasswordCancel dPassword
   onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel

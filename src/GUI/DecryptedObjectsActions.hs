@@ -19,7 +19,6 @@ import GUI.CommonObjectsActions
 import Graphics.UI.Gtk
 import Data.IORef
 
-
 updateDecDataState :: DataState -> Int -> File -> DataState
 updateDecDataState state id file = state { dec = updateDataState (dec state) id file }
 
@@ -69,31 +68,28 @@ buildDecArrowButtons builder = buildButtons builder StringsPack { str1 = "decryp
 onDecAddButtonsClick :: Box -> ButtonsPack -> BoxesPack -> IO ()
 onDecAddButtonsClick = onAddButtonClick
 
-
 onDecTrashButtonsClick :: IORef DataState -> Box -> ButtonsPack -> BoxesPack -> ButtonsPack -> FCButtonsPack-> IO ()
 onDecTrashButtonsClick refState = onTrashButtonsClick refState updateDecDataState
-
 
 onDecFCButtonsClick :: IORef DataState -> FCButtonsPack -> IO ()
 onDecFCButtonsClick refState = onFCButtonClick refState updateDecDataState
 
-
-onDecArrowButtonsClick :: IORef DataState -> IORef CurrentArrow -> Dialog -> Entry -> ButtonsPack -> IO ()
+onDecArrowButtonsClick :: IORef DataState -> IORef CurrentArrow 
+  -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> ButtonsPack -> IO ()
 onDecArrowButtonsClick refState refCurrentArrow = onArrowButtonsClick refState refCurrentArrow getDecFileFromDataState True
-
 
 onDecPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> IO ()
 onDecPasswordStartClick refState refCurrentArrow decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack = do
-    state <- readIORef refState
-    currentArrow <- readIORef refCurrentArrow
-    decAddButton <- getButtonFromPack decAddButtonsPack $ position currentArrow
-    decFileBox <- getBoxFromPack decFileBoxesPack $ position currentArrow
-    decFCButton <- getFCButtonFromPack decFCButtonsPack $ position currentArrow
-    if isEncryption currentArrow
-      then do
-        fileChooserSetFilename decFCButton "(No)"
-        writeIORef refState $ updateDecDataState state (position currentArrow) emptyFile
-        replaceInBox decTable (castToWidget decFileBox) (castToWidget decAddButton)
-      else do
-        fileChooserSetFilename decFCButton $ createFullPath $ getDecFileFromDataState state $ position currentArrow
-        replaceInBox decTable (castToWidget decAddButton) (castToWidget decFileBox)
+  state <- readIORef refState
+  currentArrow <- readIORef refCurrentArrow
+  decAddButton <- getButtonFromPack decAddButtonsPack $ position currentArrow
+  decFileBox <- getBoxFromPack decFileBoxesPack $ position currentArrow
+  decFCButton <- getFCButtonFromPack decFCButtonsPack $ position currentArrow
+  if isEncryption currentArrow
+    then do
+      fileChooserSetFilename decFCButton "(No)"
+      writeIORef refState $ updateDecDataState state (position currentArrow) emptyFile
+      replaceInBox decTable (castToWidget decFileBox) (castToWidget decAddButton)
+    else do
+      fileChooserSetFilename decFCButton $ createFullPath $ getDecFileFromDataState state $ position currentArrow
+      replaceInBox decTable (castToWidget decAddButton) (castToWidget decFileBox)

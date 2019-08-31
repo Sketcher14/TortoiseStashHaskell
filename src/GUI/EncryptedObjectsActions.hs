@@ -13,13 +13,11 @@ module GUI.EncryptedObjectsActions
   , onEncPasswordStartClick
   ) where
 
-
 import GUI.Utils
 import GUI.CommonObjectsActions
 
 import Graphics.UI.Gtk
 import Data.IORef
-
 
 updateEncDataState :: DataState -> Int -> File -> DataState
 updateEncDataState state id file = state { enc = updateDataState (enc state) id file }
@@ -72,31 +70,28 @@ buildEncArrowButtons builder = buildButtons builder StringsPack { str1 = "encryp
 onEncAddButtonsClick :: Box -> ButtonsPack -> BoxesPack -> IO ()
 onEncAddButtonsClick = onAddButtonClick
 
-
 onEncTrashButtonsClick :: IORef DataState -> Box -> ButtonsPack -> BoxesPack -> ButtonsPack -> FCButtonsPack-> IO ()
 onEncTrashButtonsClick refState = onTrashButtonsClick refState updateEncDataState
-
 
 onEncFCButtonsClick :: IORef DataState -> FCButtonsPack -> IO ()
 onEncFCButtonsClick refState = onFCButtonClick refState updateEncDataState
 
-
-onEncArrowButtonsClick :: IORef DataState -> IORef CurrentArrow -> Dialog -> Entry -> ButtonsPack -> IO ()
+onEncArrowButtonsClick :: IORef DataState -> IORef CurrentArrow 
+  -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> ButtonsPack -> IO ()
 onEncArrowButtonsClick refState refCurrentArrow = onArrowButtonsClick refState refCurrentArrow getEncFileFromDataState False
-
 
 onEncPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> IO ()
 onEncPasswordStartClick refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack = do
-    state <- readIORef refState
-    currentArrow <- readIORef refCurrentArrow
-    encAddButton <- getButtonFromPack encAddButtonsPack $ position currentArrow
-    encFileBox <- getBoxFromPack encFileBoxesPack $ position currentArrow
-    encFCButton <- getFCButtonFromPack encFCButtonsPack $ position currentArrow
-    if isEncryption currentArrow
-      then do
-        fileChooserSetFilename encFCButton $ createFullPath $ getEncFileFromDataState state $ position currentArrow
-        replaceInBox encTable (castToWidget encAddButton) (castToWidget encFileBox)
-      else do
-        fileChooserSetFilename encFCButton "(No)"
-        writeIORef refState $ updateEncDataState state (position currentArrow) emptyFile
-        replaceInBox encTable (castToWidget encFileBox) (castToWidget encAddButton)
+  state <- readIORef refState
+  currentArrow <- readIORef refCurrentArrow
+  encAddButton <- getButtonFromPack encAddButtonsPack $ position currentArrow
+  encFileBox <- getBoxFromPack encFileBoxesPack $ position currentArrow
+  encFCButton <- getFCButtonFromPack encFCButtonsPack $ position currentArrow
+  if isEncryption currentArrow
+    then do
+      fileChooserSetFilename encFCButton $ createFullPath $ getEncFileFromDataState state $ position currentArrow
+      replaceInBox encTable (castToWidget encAddButton) (castToWidget encFileBox)
+    else do
+      fileChooserSetFilename encFCButton "(No)"
+      writeIORef refState $ updateEncDataState state (position currentArrow) emptyFile
+      replaceInBox encTable (castToWidget encFileBox) (castToWidget encAddButton)
