@@ -10,6 +10,8 @@ import           Data.Bits                (xor)
 import           Data.List
 import           Data.Word
 import qualified Data.ByteString       as B
+import qualified Data.ByteString.Lazy  as L
+import Control.Concurrent                 (forkIO)
 
 invSubWord :: [Word8] -> [Word8]
 invSubWord = map invSubByte
@@ -65,6 +67,10 @@ decrypt blocks key = map (`decryptBlock` key) blocks
 
 readDecryptWrite :: String -> String -> String -> IO ()
 readDecryptWrite encPath decPath password = do  
-  input <- B.readFile encPath
+  input <- L.readFile encPath
   passwordHash <- passwordHash password
-  B.writeFile decPath $ unionBlocks $ decrypt (splitByBlocks input) passwordHash
+  forkIO $ do
+    print "decrypted start"
+    L.writeFile decPath $ unionBlocks $ decrypt (splitByBlocks input) passwordHash
+    print "decrypted end"
+  return ()

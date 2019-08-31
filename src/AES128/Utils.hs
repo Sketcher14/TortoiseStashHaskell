@@ -19,6 +19,7 @@ import qualified Crypto.Hash.MD5          as MD5
 import           Crypto.Number.F2m        (addF2m, mulF2m)
 import           Data.Bits                (xor)
 import qualified Data.ByteString          as B
+import qualified Data.ByteString.Lazy     as L
 import           Data.List
 import           Data.List.Split          (chunksOf)
 import           Data.Word
@@ -77,11 +78,10 @@ blockAdditionPKCS7 bl@(Block bytes) =
     blockLen = length bytes
     amountAddBytes = blockSize - blockLen
 
-splitByBlocks :: B.ByteString -> [Block]
+splitByBlocks :: L.ByteString -> [Block]
 splitByBlocks input = blocks ++ [blockAdditionPKCS7 last]
   where
-    (last:blocks) = reverse $ map Block $ chunksOf blockSize $ B.unpack input
-
+    (last:blocks) = reverse $ map Block $ chunksOf blockSize $ L.unpack input
 
 removeBlockAdditionPKCS7 :: Block -> Block
 removeBlockAdditionPKCS7 bl@(Block bytes) =
@@ -91,7 +91,7 @@ removeBlockAdditionPKCS7 bl@(Block bytes) =
   where
     lastByte = fromIntegral $ last bytes
 
-unionBlocks :: [Block] -> B.ByteString
-unionBlocks inputBlocks = B.pack $ concatMap (\(Block bytes) -> bytes) (blocks ++ [removeBlockAdditionPKCS7 last])
+unionBlocks :: [Block] -> L.ByteString
+unionBlocks inputBlocks = L.pack $ concatMap (\(Block bytes) -> bytes) (blocks ++ [removeBlockAdditionPKCS7 last])
   where
     (last:blocks) = reverse inputBlocks
