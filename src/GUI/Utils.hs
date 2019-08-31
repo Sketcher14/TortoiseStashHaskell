@@ -3,10 +3,17 @@ module GUI.Utils
   , FilesPack(..)
   , DataState(..)
   , CurrentArrow(..)
-  , parseFullPath
+  , ButtonsPack(..)
+  , BoxesPack(..)
+  , FCButtonsPack(..)
+  , StringsPack(..)
+  , extension
+  , removeExtension
   , emptyFile
-  , replaceBoxOnButtonInBox
-  , replaceButtonOnBoxInBox
+  , startDataState
+  , parseFullPath
+  , createFullPath
+  , replaceInBox
   , getButton
   , getBox
   , getFCButton
@@ -14,15 +21,9 @@ module GUI.Utils
   , getDialog
   , getFCDialog
   , getLabel
-  , startDataState
-  , ButtonsPack(..)
-  , BoxesPack(..)
-  , FCButtonsPack(..)
   , getButtonFromPack
   , getBoxFromPack
   , getFCButtonFromPack
-  , createFullPath
-  , extension
   )
 where
 
@@ -39,6 +40,7 @@ data File = File
   , path :: String
   } deriving (Show)
 
+
 data FilesPack = FilesPack
   { file1 :: File
   , file2 :: File
@@ -46,6 +48,7 @@ data FilesPack = FilesPack
   , file4 :: File
   , file5 :: File
   } deriving (Show)
+
 
 data DataState = DataState
   { dec :: FilesPack
@@ -58,11 +61,56 @@ data CurrentArrow = CurrentArrow
   , isEncryption :: Bool
   } deriving (Show)
 
+
+data ButtonsPack = ButtonsPack
+  { but1 :: Button
+  , but2 :: Button
+  , but3 :: Button
+  , but4 :: Button
+  , but5 :: Button
+  }
+
+
+data BoxesPack = BoxesPack
+  { box1 :: Box
+  , box2 :: Box
+  , box3 :: Box
+  , box4 :: Box
+  , box5 :: Box
+  }
+
+
+data FCButtonsPack = FCButtonsPack
+  { fcBut1 :: FileChooserButton
+  , fcBut2 :: FileChooserButton
+  , fcBut3 :: FileChooserButton
+  , fcBut4 :: FileChooserButton
+  , fcBut5 :: FileChooserButton
+  }
+
+
+data StringsPack = StringsPack
+  { str1 :: String
+  , str2 :: String
+  , str3 :: String
+  , str4 :: String
+  , str5 :: String
+  }
+
+
 extension :: String
 extension = "TTS"
 
+removeExtension :: String -> String
+removeExtension name = newName
+  where
+    index = last $ elemIndices '.' name
+    newName = take index name
+
+
 emptyFile :: File
 emptyFile = File { name = "", path = "" }
+
 
 emptyFilesPack :: FilesPack
 emptyFilesPack = FilesPack
@@ -73,8 +121,10 @@ emptyFilesPack = FilesPack
   , file5 = emptyFile
   }
 
+
 startDataState :: DataState
 startDataState = DataState { dec = emptyFilesPack, enc = emptyFilesPack }
+
 
 parseFullPath :: Maybe String -> File
 parseFullPath Nothing = emptyFile
@@ -89,63 +139,37 @@ createFullPath :: File -> String
 createFullPath File { name = name, path = path } = path ++ "/" ++ name
 
 
-replaceButtonOnBoxInBox :: Box -> Button -> Box -> IO ()
-replaceButtonOnBoxInBox parent old new = do
+replaceInBox :: Box -> Widget -> Widget -> IO ()
+replaceInBox parent old new = do
   pos <- get parent $ boxChildPosition old
   containerRemove parent old
   containerAdd parent new
   boxReorderChild parent new pos
 
-replaceBoxOnButtonInBox :: Box -> Box -> Button -> IO ()
-replaceBoxOnButtonInBox parent old new = do
-  position <- get parent $ boxChildPosition old
-  containerRemove parent old
-  containerAdd parent new
-  boxReorderChild parent new position
-
-
-data ButtonsPack = ButtonsPack
-  { but1 :: Button
-  , but2 :: Button
-  , but3 :: Button
-  , but4 :: Button
-  , but5 :: Button
-  }
-
-data BoxesPack = BoxesPack
-  { box1 :: Box
-  , box2 :: Box
-  , box3 :: Box
-  , box4 :: Box
-  , box5 :: Box
-  }
-
-data FCButtonsPack = FCButtonsPack
-  { fcBut1 :: FileChooserButton
-  , fcBut2 :: FileChooserButton
-  , fcBut3 :: FileChooserButton
-  , fcBut4 :: FileChooserButton
-  , fcBut5 :: FileChooserButton
-  }
-
 
 getButton :: Builder -> String -> IO Button
 getButton builder = builderGetObject builder castToButton
 
+
 getBox :: Builder -> String -> IO Box
 getBox builder = builderGetObject builder castToBox
+
 
 getFCButton :: Builder -> String -> IO FileChooserButton
 getFCButton builder = builderGetObject builder castToFileChooserButton
 
+
 getEntry :: Builder -> String -> IO Entry
 getEntry builder = builderGetObject builder castToEntry
+
 
 getDialog :: Builder -> String -> IO Dialog
 getDialog builder = builderGetObject builder castToDialog
 
+
 getFCDialog :: Builder -> String -> IO FileChooserDialog
 getFCDialog builder = builderGetObject builder castToFileChooserDialog
+
 
 getLabel :: Builder -> String -> IO Label
 getLabel builder = builderGetObject builder castToLabel
@@ -165,6 +189,7 @@ getBoxFromPack boxesPack 2 = return $ box2 boxesPack
 getBoxFromPack boxesPack 3 = return $ box3 boxesPack
 getBoxFromPack boxesPack 4 = return $ box4 boxesPack
 getBoxFromPack boxesPack 5 = return $ box5 boxesPack
+
 
 getFCButtonFromPack :: FCButtonsPack -> Int -> IO FileChooserButton
 getFCButtonFromPack fcButtonsPack 1 = return $ fcBut1 fcButtonsPack

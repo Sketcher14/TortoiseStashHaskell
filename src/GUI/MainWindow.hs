@@ -46,17 +46,6 @@ mainWindow = do
   dPasswordLabel <- getLabel builder "password_box_buttons_label"
 
 
-  onFileSaveCancelButtonClick dFileSaveCancel dFileSave
-  onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser
-  onFileSaveNextButtonClick state currentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword
-
-  onFileChooserCancelClick dFileChooserCancel dFileChooser
-  onFileChooserApplyClick dFileChooserApply dFileChooser dFileSaveEntry
-
-  onPasswordCancelClick dPasswordCancel dPassword
-  onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
-  onPasswordStartClick state currentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
-
   decBuilder <- builderNew
   builderAddFromFile decBuilder "assets/glade/decrypted_boxes.glade"
 
@@ -67,10 +56,9 @@ mainWindow = do
   decArrowButtonsPack <- buildDecArrowButtons decBuilder
 
   onDecAddButtonsClick decTable decAddButtonsPack decFileBoxesPack
-  onDecTrashButtonsClick decTable decTrashButtonsPack decFileBoxesPack decAddButtonsPack
+  onDecTrashButtonsClick state decTable decTrashButtonsPack decFileBoxesPack decAddButtonsPack decFCButtonsPack
   onDecFCButtonsClick state decFCButtonsPack
   onDecArrowButtonsClick state currentArrow dFileSave dFileSaveEntry decArrowButtonsPack
-  onDecPasswordStartClick state currentArrow dPasswordStart decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
 
 
   encBuilder <- builderNew
@@ -83,13 +71,27 @@ mainWindow = do
   encArrowButtonsPack <- buildEncArrowButtons encBuilder
   
   onEncAddButtonsClick encTable encAddButtonsPack encFileBoxesPack
-  onEncTrashButtonsClick encTable encTrashButtonsPack encFileBoxesPack encAddButtonsPack
+  onEncTrashButtonsClick state encTable encTrashButtonsPack encFileBoxesPack encAddButtonsPack encFCButtonsPack
   onEncFCButtonsClick state encFCButtonsPack
   onEncArrowButtonsClick state currentArrow dFileSave dFileSaveEntry encArrowButtonsPack
-  onEncPasswordStartClick state currentArrow dPasswordStart encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack
+
+
+  onFileSaveCancelButtonClick dFileSaveCancel dFileSave
+  onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser
+  onFileSaveNextButtonClick state currentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword
+
+  onFileChooserCancelClick dFileChooserCancel dFileChooser
+  onFileChooserApplyClick dFileChooserApply dFileChooser dFileSaveEntry
+
+  onPasswordCancelClick dPasswordCancel dPassword
+  onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
+  onPasswordStartClick
+    state currentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
+    decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
+    encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack
+
 
   widgetShowAll window
-
   on window deleteEvent $ liftIO mainQuit >> return False
 
   mainGUI

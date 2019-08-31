@@ -52,7 +52,7 @@ onFileChooserCancelClick dFileChooserCancel dFileChooser = do
 fileChooserApplyClick :: FileChooserDialog -> Entry -> IO ()
 fileChooserApplyClick dFileChooser dFileSaveEntry = do
   (Just filePath)::Maybe String <- fileChooserGetFilename dFileChooser
-  entrySetText dFileSaveEntry $ filePath -- ++ "." ++ extension
+  entrySetText dFileSaveEntry $ filePath ++ "." ++ extension
   widgetHide dFileChooser
 
 onFileChooserApplyClick :: Button -> FileChooserDialog -> Entry -> IO ()
@@ -99,14 +99,23 @@ passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry d
       let decFullPath = createFullPath $ getDecFileFromDataState state $ position currentArrow
       let encFullPath = createFullPath $ getEncFileFromDataState state $ position currentArrow
       password::String <- entryGetText dPasswordInputEntry
+      entrySetText dPasswordInputEntry ""
+      entrySetText dPasswordRepeatEntry ""
       if isEncryption currentArrow
         then readEncryptWrite decFullPath encFullPath password
         else readDecryptWrite encFullPath decFullPath password
       widgetHide dPassword
 
 
-onPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> IO ()
-onPasswordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword = do
-  on dPasswordStart buttonActivated $
-    passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
-  return ()
+onPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog
+  -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack
+  -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> IO ()
+onPasswordStartClick
+  refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
+  decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
+  encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack = do
+    on dPasswordStart buttonActivated $ do
+      passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
+      onDecPasswordStartClick refState refCurrentArrow decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
+      onEncPasswordStartClick refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack
+    return ()
