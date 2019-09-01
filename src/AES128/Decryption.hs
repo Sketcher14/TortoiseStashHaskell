@@ -1,5 +1,8 @@
 module AES128.Decryption
-  ( readDecryptWrite
+  ( invShiftRows
+  , invMixColumns
+  , decrypt
+  , readDecryptWrite
   ) where
 
 import           AES128.ExpandedKey

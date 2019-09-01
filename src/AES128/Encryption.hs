@@ -1,5 +1,8 @@
 module AES128.Encryption
-  ( readEncryptWrite
+  ( shiftRows
+  , mixColumns
+  , encrypt
+  , readEncryptWrite
   ) where
 
 import           AES128.ExpandedKey

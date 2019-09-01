@@ -27,18 +27,18 @@ import qualified Data.ByteString.UTF8 as BSU
 
 newtype Block =
   Block [Word8]
-  deriving (Show) -- 16 bytes
+  deriving (Show, Eq) -- 16 bytes
 
 newtype Key =
   Key128 [Word8]
-  deriving (Show) -- 16 bytes
+  deriving (Show, Eq) -- 16 bytes
 
 data AESState = AESState
   { w0 :: [Word8]
   , w1 :: [Word8]
   , w2 :: [Word8]
   , w3 :: [Word8]
-  }
+  } deriving (Show)
 
 aesPolynomial :: Integer
 aesPolynomial = 0x11B
