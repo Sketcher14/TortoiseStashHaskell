@@ -59,6 +59,7 @@ mainWindow = do
   decTrashButtonsPack <- buildDecTrashButtons decBuilder
   decFCButtonsPack <- buildDecFCButtons decBuilder
   addFileFilterToFCPack noFilter decFCButtonsPack
+  addFileFilterToFCPack appFileFilter decFCButtonsPack
   decArrowButtonsPack <- buildDecArrowButtons decBuilder
 
 
@@ -81,6 +82,7 @@ mainWindow = do
   onEncTrashButtonsClick state encTable encTrashButtonsPack encFileBoxesPack encAddButtonsPack encFCButtonsPack
   onEncFCButtonsClick state encFCButtonsPack
   addFileFilterToFCPack appFileFilter encFCButtonsPack
+  addFileFilterToFCPack noFilter encFCButtonsPack
   onEncArrowButtonsClick state currentArrow dFileSave dFileSaveEntry dFileChooser appFileFilter encArrowButtonsPack
 
   onFileSaveCancelButtonClick dFileSaveCancel dFileSave
