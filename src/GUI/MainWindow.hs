@@ -28,6 +28,8 @@ mainWindow = do
   decTable <- getBox builder "main_window_box_table_decrypt"
   encTable <- getBox builder "main_window_box_table_encrypt"
 
+  emptiesPack <- buildEmptiesPack builder
+
   appFileFilter <- createAppExtensionFileFilter
   noFilter <- createNoFilterFileFilter
 
@@ -50,6 +52,9 @@ mainWindow = do
   dPasswordRepeatEntry <- getEntry builder "password_box_repeat_entry"
   dPasswordLabel <- getLabel builder "password_box_buttons_label"
 
+  dMessage <- getDialog builder "message"
+  dMessageName <- getLabel builder "message_name"
+  dMessageOk <- getButton builder "message_ok"
 
   decBuilder <- builderNew
   builderAddFromFile decBuilder "assets/glade/decrypted_boxes.glade"
@@ -95,10 +100,9 @@ mainWindow = do
   onPasswordCancelClick dPasswordCancel dPassword
   onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
   onPasswordStartClick
-    state currentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
+    state currentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword emptiesPack
     decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
     encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack
-
 
   widgetShowAll window
   on window deleteEvent $ liftIO mainQuit >> return False

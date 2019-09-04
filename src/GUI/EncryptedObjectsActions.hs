@@ -11,6 +11,7 @@ module GUI.EncryptedObjectsActions
   , onEncFCButtonsClick
   , onEncArrowButtonsClick
   , onEncPasswordStartClick
+  , onEncAfterCrypto
   ) where
 
 import GUI.Utils
@@ -18,6 +19,7 @@ import GUI.CommonObjectsActions
 
 import Graphics.UI.Gtk
 import Data.IORef
+import Control.Monad.Cont (when)
 
 updateEncDataState :: DataState -> Int -> File -> DataState
 updateEncDataState state id file = state { enc = updateDataState (enc state) id file }
@@ -80,17 +82,27 @@ onEncArrowButtonsClick :: IORef DataState -> IORef CurrentArrow
   -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> ButtonsPack -> IO ()
 onEncArrowButtonsClick refState refCurrentArrow = onArrowButtonsClick refState refCurrentArrow getEncFileFromDataState False
 
-onEncPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> IO ()
-onEncPasswordStartClick refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack = do
+
+onEncPasswordStartClick :: IORef CurrentArrow -> Box -> ButtonsPack -> EmptiesPack -> IO ()
+onEncPasswordStartClick refCurrentArrow encTable encAddButtonsPack emptiesPack = do
+  currentArrow <- readIORef refCurrentArrow
+  encAddButton <- getButtonFromPack encAddButtonsPack $ position currentArrow
+  empty <- getEmptyFromPack emptiesPack $ position currentArrow
+  when (isEncryption currentArrow) $ replaceInBox encTable (castToWidget encAddButton) (castToWidget empty)
+
+
+onEncAfterCrypto :: IORef DataState -> IORef CurrentArrow -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> EmptiesPack -> IO ()
+onEncAfterCrypto refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack emptiesPack = do
   state <- readIORef refState
   currentArrow <- readIORef refCurrentArrow
   encAddButton <- getButtonFromPack encAddButtonsPack $ position currentArrow
   encFileBox <- getBoxFromPack encFileBoxesPack $ position currentArrow
   encFCButton <- getFCButtonFromPack encFCButtonsPack $ position currentArrow
+  empty <- getEmptyFromPack emptiesPack $ position currentArrow
   if isEncryption currentArrow
     then do
       fileChooserSetFilename encFCButton $ createFullPath $ getEncFileFromDataState state $ position currentArrow
-      replaceInBox encTable (castToWidget encAddButton) (castToWidget encFileBox)
+      replaceInBox encTable (castToWidget empty) (castToWidget encFileBox)
     else do
       fileChooserSetFilename encFCButton "(No)"
       writeIORef refState $ updateEncDataState state (position currentArrow) emptyFile

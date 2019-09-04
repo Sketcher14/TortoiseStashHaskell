@@ -14,7 +14,6 @@ import           Data.List
 import           Data.Word
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Lazy  as L
-import Control.Concurrent                 (forkIO)
 
 subWord :: [Word8] -> [Word8]
 subWord = map subByte
@@ -66,8 +65,7 @@ readEncryptWrite :: String -> String -> String -> IO ()
 readEncryptWrite decPath encPath password = do
   input <- L.readFile decPath
   passwordHash <- passwordHash password
-  forkIO $ do 
-    print "encrypted start"
-    L.writeFile encPath $ unionBlocks $ encrypt (splitByBlocks input) passwordHash
-    print "encrypted end"
+  print "encrypted start"
+  L.writeFile encPath $ unionBlocks $ encrypt (splitByBlocks input) passwordHash
+  print "encrypted end"
   return ()

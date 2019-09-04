@@ -20,6 +20,7 @@ import Graphics.UI.Gtk
 import Data.IORef
 import Control.Monad.Trans
 import Data.Maybe
+import Control.Concurrent                 (forkIO, forkFinally)
 
 onFileSaveBrowseButtonClick :: Button -> FileChooserDialog -> IO ()
 onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser = do
@@ -91,8 +92,8 @@ onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabe
     passwordEntryReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
   return ()
 
-passwordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> IO ()
-passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword = do
+passwordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> IO () -> IO () -> IO ()
+passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword foo1 foo2 = do
   bEqual <- compareEntriesTexts dPasswordInputEntry dPasswordRepeatEntry
   if not bEqual
     then return ()
@@ -104,20 +105,32 @@ passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry d
       password::String <- entryGetText dPasswordInputEntry
       entrySetText dPasswordInputEntry ""
       entrySetText dPasswordRepeatEntry ""
-      if isEncryption currentArrow
-        then readEncryptWrite decFullPath encFullPath password
-        else readDecryptWrite encFullPath decFullPath password
+      createThread (if isEncryption currentArrow
+                      then readEncryptWrite decFullPath encFullPath password
+                      else readDecryptWrite encFullPath decFullPath password
+                   )
+                   (do
+                      foo1
+                      foo2
+                   )
       widgetHide dPassword
 
-onPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog
+createThread :: IO () -> IO () -> IO ()
+createThread action finalAction = do
+  forkFinally action (const finalAction)
+  return ()
+
+onPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> EmptiesPack
   -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack
   -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> IO ()
 onPasswordStartClick
-  refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
+  refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword emptiesPack
   decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
   encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack = do
     on dPasswordStart buttonActivated $ do
+      onDecPasswordStartClick refCurrentArrow decTable decAddButtonsPack emptiesPack
+      onEncPasswordStartClick refCurrentArrow encTable encAddButtonsPack emptiesPack
       passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
-      onDecPasswordStartClick refState refCurrentArrow decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
-      onEncPasswordStartClick refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack
+        (onDecAfterCrypto refState refCurrentArrow decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack emptiesPack)
+        (onEncAfterCrypto refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack emptiesPack)
     return ()

@@ -134,8 +134,8 @@ arrowButtonClick :: IORef DataState -> IORef CurrentArrow -> Int -> (DataState -
   -> Bool -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> IO ()
 arrowButtonClick 
   refState refCurrentArrow id getFileFromDataStateFun isEnc dFileSave dFileSaveEntry dFileChooser fileFilter = do
-    writeIORef refCurrentArrow CurrentArrow { position = id, isEncryption = isEnc }
     state <- readIORef refState
+    writeIORef refCurrentArrow CurrentArrow { position = id, isEncryption = isEnc }
     if isEnc
       then entrySetText dFileSaveEntry $ createFullPath (getFileFromDataStateFun state id) ++ "." ++ extension
       else entrySetText dFileSaveEntry $ removeExtension $ createFullPath (getFileFromDataStateFun state id)

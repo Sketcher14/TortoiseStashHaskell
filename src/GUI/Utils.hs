@@ -7,6 +7,7 @@ module GUI.Utils
   , BoxesPack(..)
   , FCButtonsPack(..)
   , StringsPack(..)
+  , EmptiesPack(..)
   , extension
   , removeExtension
   , emptyFile
@@ -24,9 +25,11 @@ module GUI.Utils
   , getButtonFromPack
   , getBoxFromPack
   , getFCButtonFromPack
+  , getEmptyFromPack
   , createAppExtensionFileFilter
   , createNoFilterFileFilter
   , addFileFilterToFCPack
+  , buildEmptiesPack
   ) where
 
 import Data.List
@@ -88,6 +91,14 @@ data StringsPack = StringsPack
   , str3 :: String
   , str4 :: String
   , str5 :: String
+  }
+
+data EmptiesPack = EmptiesPack
+  { empty1 :: Label
+  , empty2 :: Label
+  , empty3 :: Label
+  , empty4 :: Label
+  , empty5 :: Label
   }
 
 extension :: String
@@ -177,6 +188,13 @@ getFCButtonFromPack fcButtonsPack 3 = return $ fcBut3 fcButtonsPack
 getFCButtonFromPack fcButtonsPack 4 = return $ fcBut4 fcButtonsPack
 getFCButtonFromPack fcButtonsPack 5 = return $ fcBut5 fcButtonsPack
 
+getEmptyFromPack :: EmptiesPack -> Int -> IO Label
+getEmptyFromPack emptiesPack 1 = return $ empty1 emptiesPack
+getEmptyFromPack emptiesPack 2 = return $ empty2 emptiesPack
+getEmptyFromPack emptiesPack 3 = return $ empty3 emptiesPack
+getEmptyFromPack emptiesPack 4 = return $ empty4 emptiesPack
+getEmptyFromPack emptiesPack 5 = return $ empty5 emptiesPack
+
 createAppExtensionFileFilter :: IO FileFilter
 createAppExtensionFileFilter = do
   filter <- fileFilterNew
@@ -200,3 +218,18 @@ addFileFilterToFCPack
     fileChooserAddFilter fcBut3 fileFilter
     fileChooserAddFilter fcBut4 fileFilter
     fileChooserAddFilter fcBut5 fileFilter
+
+buildEmptiesPack :: Builder -> IO EmptiesPack
+buildEmptiesPack builder = do
+  empty1 <- getLabel builder "empty"
+  empty2 <- getLabel builder "empty"
+  empty3 <- getLabel builder "empty"
+  empty4 <- getLabel builder "empty"
+  empty5 <- getLabel builder "empty"
+  return EmptiesPack { empty1 = empty1
+                   , empty2 = empty2
+                   , empty3 = empty3
+                   , empty4 = empty4
+                   , empty5 = empty5
+                   }
+
