@@ -77,7 +77,7 @@ onDecFCButtonsClick :: IORef DataState -> FCButtonsPack -> IO ()
 onDecFCButtonsClick refState = onFCButtonClick refState updateDecDataState
 
 onDecArrowButtonsClick :: IORef DataState -> IORef CurrentArrow 
-  -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> ButtonsPack -> IO ()
+  -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> Dialog -> Label -> ButtonsPack  -> IO ()
 onDecArrowButtonsClick refState refCurrentArrow = onArrowButtonsClick refState refCurrentArrow getDecFileFromDataState True
 
 onDecPasswordStartClick :: IORef CurrentArrow -> Box -> ButtonsPack -> EmptiesPack -> IO ()

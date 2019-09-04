@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module GUI.Utils
   ( File(..)
   , FilesPack(..)
@@ -30,18 +31,22 @@ module GUI.Utils
   , createNoFilterFileFilter
   , addFileFilterToFCPack
   , buildEmptiesPack
+  , showMessage
+  , validateFile
   ) where
 
 import Data.List
 import Data.Maybe
-import Control.Monad (forever)
+import System.IO
 
 import Graphics.UI.Gtk
+import System.IO.Error
+import Control.Exception (IOException, handle)
 
 data File = File
   { name :: String
   , path :: String
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 data FilesPack = FilesPack
   { file1 :: File
@@ -233,3 +238,13 @@ buildEmptiesPack builder = do
                    , empty5 = empty5
                    }
 
+showMessage :: Dialog -> Label -> String -> IO ()
+showMessage dMessage dMessageName text = do
+  labelSetText dMessageName text
+  widgetShowAll dMessage
+
+
+validateFile :: String -> IO (Bool, String)
+validateFile filePath = handle (\(e :: IOException) -> print e >> return (False, show e)) $ do
+                          h <- openFile filePath ReadMode
+                          return (True, "")

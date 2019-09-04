@@ -71,7 +71,7 @@ mainWindow = do
   onDecAddButtonsClick decTable decAddButtonsPack decFileBoxesPack
   onDecTrashButtonsClick state decTable decTrashButtonsPack decFileBoxesPack decAddButtonsPack decFCButtonsPack
   onDecFCButtonsClick state decFCButtonsPack
-  onDecArrowButtonsClick state currentArrow dFileSave dFileSaveEntry dFileChooser noFilter decArrowButtonsPack
+  onDecArrowButtonsClick state currentArrow dFileSave dFileSaveEntry dFileChooser noFilter dMessage dMessageName decArrowButtonsPack
 
 
   encBuilder <- builderNew
@@ -88,7 +88,7 @@ mainWindow = do
   onEncFCButtonsClick state encFCButtonsPack
   addFileFilterToFCPack appFileFilter encFCButtonsPack
   addFileFilterToFCPack noFilter encFCButtonsPack
-  onEncArrowButtonsClick state currentArrow dFileSave dFileSaveEntry dFileChooser appFileFilter encArrowButtonsPack
+  onEncArrowButtonsClick state currentArrow dFileSave dFileSaveEntry dFileChooser appFileFilter dMessage dMessageName encArrowButtonsPack
 
   onFileSaveCancelButtonClick dFileSaveCancel dFileSave
   onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser
@@ -97,12 +97,14 @@ mainWindow = do
   onFileChooserCancelClick dFileChooserCancel dFileChooser
   onFileChooserApplyClick currentArrow dFileChooserApply dFileChooser dFileSaveEntry
 
-  onPasswordCancelClick dPasswordCancel dPassword
+  onPasswordCancelClick dPasswordCancel dPassword dPasswordInputEntry dPasswordRepeatEntry
   onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
   onPasswordStartClick
     state currentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword emptiesPack
     decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
     encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack
+
+  onMessageOkClick dMessage dMessageOk
 
   widgetShowAll window
   on window deleteEvent $ liftIO mainQuit >> return False

@@ -8,6 +8,7 @@ module GUI.IntermediateWindowsActions
   , onPasswordCancelClick
   , onPasswordEntriesReleased
   , onPasswordStartClick
+  , onMessageOkClick
   ) where
 
 import GUI.Utils
@@ -66,9 +67,12 @@ onFileChooserApplyClick refCurrentArrow dFileChooserApply dFileChooser dFileSave
   on dFileChooserApply buttonActivated $ fileChooserApplyClick refCurrentArrow dFileChooser dFileSaveEntry
   return ()
 
-onPasswordCancelClick :: Button -> Dialog -> IO ()
-onPasswordCancelClick dPasswordCancel dPassword = do
-  on dPasswordCancel buttonActivated $ widgetHide dPassword
+onPasswordCancelClick :: Button -> Dialog -> Entry -> Entry -> IO ()
+onPasswordCancelClick dPasswordCancel dPassword dPasswordInputEntry dPasswordRepeatEntry = do
+  on dPasswordCancel buttonActivated $ do
+    entrySetText dPasswordInputEntry ""
+    entrySetText dPasswordRepeatEntry ""
+    widgetHide dPassword
   return ()
 
 compareEntriesTexts :: Entry -> Entry -> IO Bool
@@ -81,7 +85,7 @@ passwordEntryReleased :: Entry -> Entry -> Label -> IO ()
 passwordEntryReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel = do
   bEqual <- compareEntriesTexts dPasswordInputEntry dPasswordRepeatEntry
   if bEqual
-    then labelSetText dPasswordLabel "Passwords match"      -- TODO set color
+    then labelSetText dPasswordLabel "Passwords match"
     else labelSetText dPasswordLabel "Passwords doesn't match"
 
 onPasswordEntriesReleased :: Entry -> Entry -> Label -> IO ()
@@ -134,3 +138,8 @@ onPasswordStartClick
         (onDecAfterCrypto refState refCurrentArrow decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack emptiesPack)
         (onEncAfterCrypto refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack emptiesPack)
     return ()
+    
+onMessageOkClick :: Dialog -> Button -> IO ()
+onMessageOkClick dMessage dMessageOk = do
+  on dMessageOk buttonActivated $ widgetHide dMessage
+  return () 

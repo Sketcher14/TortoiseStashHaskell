@@ -79,7 +79,7 @@ onEncFCButtonsClick :: IORef DataState -> FCButtonsPack -> IO ()
 onEncFCButtonsClick refState = onFCButtonClick refState updateEncDataState
 
 onEncArrowButtonsClick :: IORef DataState -> IORef CurrentArrow 
-  -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> ButtonsPack -> IO ()
+  -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> Dialog -> Label -> ButtonsPack  -> IO ()
 onEncArrowButtonsClick refState refCurrentArrow = onArrowButtonsClick refState refCurrentArrow getEncFileFromDataState False
 
 

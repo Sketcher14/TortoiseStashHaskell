@@ -131,19 +131,28 @@ onFCButtonClick
     return ()
 
 arrowButtonClick :: IORef DataState -> IORef CurrentArrow -> Int -> (DataState -> Int -> File)
-  -> Bool -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> IO ()
+  -> Bool -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> Dialog -> Label -> IO ()
 arrowButtonClick 
-  refState refCurrentArrow id getFileFromDataStateFun isEnc dFileSave dFileSaveEntry dFileChooser fileFilter = do
+  refState refCurrentArrow id getFileFromDataStateFun isEnc dFileSave dFileSaveEntry dFileChooser fileFilter dMessage dMessageName = do
     state <- readIORef refState
     writeIORef refCurrentArrow CurrentArrow { position = id, isEncryption = isEnc }
-    if isEnc
-      then entrySetText dFileSaveEntry $ createFullPath (getFileFromDataStateFun state id) ++ "." ++ extension
-      else entrySetText dFileSaveEntry $ removeExtension $ createFullPath (getFileFromDataStateFun state id)
-    fileChooserSetFilter dFileChooser fileFilter
-    widgetShowAll dFileSave
+    let file = getFileFromDataStateFun state id
+    if file == emptyFile
+      then showMessage dMessage dMessageName "Select file before encryption or decryption"
+      else do
+        let filePath = createFullPath file
+        (isValid, message) <- validateFile filePath
+        if not isValid
+          then showMessage dMessage dMessageName message
+          else do
+            if isEnc
+              then entrySetText dFileSaveEntry $ filePath ++ "." ++ extension
+              else entrySetText dFileSaveEntry $ removeExtension filePath
+            fileChooserSetFilter dFileChooser fileFilter
+            widgetShowAll dFileSave
 
 onArrowButtonsClick :: IORef DataState -> IORef CurrentArrow ->
-  (DataState -> Int -> File) -> Bool -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> ButtonsPack ->  IO ()
+  (DataState -> Int -> File) -> Bool -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> Dialog -> Label -> ButtonsPack  -> IO ()
 onArrowButtonsClick
   refState
   refCurrentArrow
@@ -153,15 +162,17 @@ onArrowButtonsClick
   dFileSaveEntry
   dFileChooser
   fileFilter
+  dMessage
+  dMessageName
   ButtonsPack { but1 = arrowBut1, but2 = arrowBut2, but3 = arrowBut3, but4 = arrowBut4, but5 = arrowBut5 } = do
     on arrowBut1 buttonActivated $
-      arrowButtonClick refState refCurrentArrow 1 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter
+      arrowButtonClick refState refCurrentArrow 1 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter dMessage dMessageName
     on arrowBut2 buttonActivated $
-      arrowButtonClick refState refCurrentArrow 2 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter
+      arrowButtonClick refState refCurrentArrow 2 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter dMessage dMessageName
     on arrowBut3 buttonActivated $
-      arrowButtonClick refState refCurrentArrow 3 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter
+      arrowButtonClick refState refCurrentArrow 3 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter dMessage dMessageName
     on arrowBut4 buttonActivated $
-      arrowButtonClick refState refCurrentArrow 4 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter
+      arrowButtonClick refState refCurrentArrow 4 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter dMessage dMessageName
     on arrowBut5 buttonActivated $
-      arrowButtonClick refState refCurrentArrow 5 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter
+      arrowButtonClick refState refCurrentArrow 5 getFileFromDataStateFun isEncryption dFileSave dFileSaveEntry dFileChooser fileFilter dMessage dMessageName
     return ()
