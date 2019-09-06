@@ -82,13 +82,15 @@ onEncArrowButtonsClick :: IORef DataState -> IORef CurrentArrow
   -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> Dialog -> Label -> ButtonsPack  -> IO ()
 onEncArrowButtonsClick refState refCurrentArrow = onArrowButtonsClick refState refCurrentArrow getEncFileFromDataState False
 
-
-onEncPasswordStartClick :: IORef CurrentArrow -> Box -> ButtonsPack -> EmptiesPack -> IO ()
-onEncPasswordStartClick refCurrentArrow encTable encAddButtonsPack emptiesPack = do
+onEncPasswordStartClick :: IORef CurrentArrow -> Box -> ButtonsPack -> FCButtonsPack -> EmptiesPack -> IO ()
+onEncPasswordStartClick refCurrentArrow encTable encAddButtonsPack encFCButtonsPack emptiesPack = do
   currentArrow <- readIORef refCurrentArrow
   encAddButton <- getButtonFromPack encAddButtonsPack $ position currentArrow
+  encFCButton <- getFCButtonFromPack encFCButtonsPack $ position currentArrow
   empty <- getEmptyFromPack emptiesPack $ position currentArrow
-  when (isEncryption currentArrow) $ replaceInBox encTable (castToWidget encAddButton) (castToWidget empty)
+  when (isEncryption currentArrow) $ do
+    pos <- get encTable $ boxChildPosition encAddButton
+    replaceInBox encTable (if pos < 0 then castToWidget encFCButton else castToWidget encAddButton) (castToWidget empty)
 
 
 onEncAfterCrypto :: IORef DataState -> IORef CurrentArrow -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> EmptiesPack -> IO ()

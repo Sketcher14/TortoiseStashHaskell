@@ -25,7 +25,12 @@ import Control.Concurrent                 (forkIO, forkFinally)
 
 onFileSaveBrowseButtonClick :: Button -> FileChooserDialog -> IO ()
 onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser = do
-  on dFileSaveBrowse buttonActivated $ widgetShowAll dFileChooser
+  on dFileSaveBrowse buttonActivated $ do
+    answer <- dialogRun dFileChooser
+    case answer of
+      ResponseDeleteEvent -> widgetHide dFileChooser
+      ResponseNone -> widgetHide dFileChooser
+      _ -> print $ "dFileChooser other " ++ show answer
   return ()
 
 onFileSaveCancelButtonClick :: Button -> Dialog -> IO ()
@@ -33,8 +38,10 @@ onFileSaveCancelButtonClick dFileSaveCancel dFileSave = do
   on dFileSaveCancel buttonActivated $ widgetHide dFileSave
   return ()
 
-onFileSaveNextButtonClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Dialog -> Dialog -> IO ()
-onFileSaveNextButtonClick refState refCurrentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword = do
+onFileSaveNextButtonClick :: IORef DataState -> IORef CurrentArrow
+  -> Button -> Entry -> Dialog -> Dialog -> Entry -> Entry -> IO ()
+onFileSaveNextButtonClick refState refCurrentArrow
+  dFileSaveNext dFileSaveEntry dFileSave dPassword dPasswordInputEntry dPasswordRepeatEntry = do
     on dFileSaveNext buttonActivated $ do 
       fullPath::String <- entryGetText dFileSaveEntry
       state <- readIORef refState
@@ -43,7 +50,11 @@ onFileSaveNextButtonClick refState refCurrentArrow dFileSaveNext dFileSaveEntry 
         then writeIORef refState $ updateEncDataState state (position currentArrow) $ parseFullPath (Just fullPath)
         else writeIORef refState $ updateDecDataState state (position currentArrow) $ parseFullPath (Just fullPath)
       widgetHide dFileSave
-      widgetShowAll dPassword
+      answer <- dialogRun dPassword
+      case answer of
+        ResponseDeleteEvent -> passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry
+        ResponseNone -> passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry
+        _ -> print $ "dPassword other " ++ show answer
     return ()
 
 onFileChooserCancelClick :: Button -> FileChooserDialog -> IO ()
@@ -67,12 +78,15 @@ onFileChooserApplyClick refCurrentArrow dFileChooserApply dFileChooser dFileSave
   on dFileChooserApply buttonActivated $ fileChooserApplyClick refCurrentArrow dFileChooser dFileSaveEntry
   return ()
 
+passwordCancelClick :: Dialog -> Entry -> Entry -> IO ()
+passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry = do
+  entrySetText dPasswordInputEntry ""
+  entrySetText dPasswordRepeatEntry ""
+  widgetHide dPassword
+
 onPasswordCancelClick :: Button -> Dialog -> Entry -> Entry -> IO ()
 onPasswordCancelClick dPasswordCancel dPassword dPasswordInputEntry dPasswordRepeatEntry = do
-  on dPasswordCancel buttonActivated $ do
-    entrySetText dPasswordInputEntry ""
-    entrySetText dPasswordRepeatEntry ""
-    widgetHide dPassword
+  on dPasswordCancel buttonActivated $ passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry
   return ()
 
 compareEntriesTexts :: Entry -> Entry -> IO Bool
@@ -132,8 +146,8 @@ onPasswordStartClick
   decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
   encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack = do
     on dPasswordStart buttonActivated $ do
-      onDecPasswordStartClick refCurrentArrow decTable decAddButtonsPack emptiesPack
-      onEncPasswordStartClick refCurrentArrow encTable encAddButtonsPack emptiesPack
+      onDecPasswordStartClick refCurrentArrow decTable decAddButtonsPack decFCButtonsPack emptiesPack
+      onEncPasswordStartClick refCurrentArrow encTable encAddButtonsPack encFCButtonsPack emptiesPack
       passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
         (onDecAfterCrypto refState refCurrentArrow decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack emptiesPack)
         (onEncAfterCrypto refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack emptiesPack)

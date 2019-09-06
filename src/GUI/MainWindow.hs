@@ -92,7 +92,7 @@ mainWindow = do
 
   onFileSaveCancelButtonClick dFileSaveCancel dFileSave
   onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser
-  onFileSaveNextButtonClick state currentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword
+  onFileSaveNextButtonClick state currentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword dPasswordInputEntry dPasswordRepeatEntry
 
   onFileChooserCancelClick dFileChooserCancel dFileChooser
   onFileChooserApplyClick currentArrow dFileChooserApply dFileChooser dFileSaveEntry

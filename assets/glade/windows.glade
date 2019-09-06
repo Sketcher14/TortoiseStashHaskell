@@ -381,62 +381,6 @@
       </object>
     </child>
   </object>
-  <object class="GtkLabel" id="empty">
-    <property name="width_request">375</property>
-    <property name="height_request">90</property>
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-  </object>
-  <object class="GtkFileChooserDialog" id="file_chooser">
-    <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Tortoise Stash</property>
-    <property name="window_position">center</property>
-    <property name="type_hint">dialog</property>
-    <property name="action">save</property>
-    <child internal-child="vbox">
-      <object class="GtkBox" id="file_chooser_box">
-        <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkButtonBox" id="file_chooser_box_buttons">
-            <property name="can_focus">False</property>
-            <child>
-              <object class="GtkButton" id="file_chooser_box_buttons_cancel">
-                <property name="label" translatable="yes">Cancel</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="file_chooser_box_buttons_apply">
-                <property name="label" translatable="yes">Apply</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-  </object>
   <object class="GtkDialog" id="file_save">
     <property name="width_request">600</property>
     <property name="height_request">260</property>
@@ -445,6 +389,7 @@
     <property name="resizable">False</property>
     <property name="window_position">center</property>
     <property name="type_hint">dialog</property>
+    <property name="transient_for">main_window</property>
     <child>
       <placeholder/>
     </child>
@@ -563,6 +508,57 @@
       </object>
     </child>
   </object>
+  <object class="GtkFileChooserDialog" id="file_chooser">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Tortoise Stash</property>
+    <property name="window_position">center</property>
+    <property name="type_hint">dialog</property>
+    <property name="transient_for">file_save</property>
+    <property name="action">save</property>
+    <child internal-child="vbox">
+      <object class="GtkBox" id="file_chooser_box">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox" id="file_chooser_box_buttons">
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkButton" id="file_chooser_box_buttons_cancel">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="file_chooser_box_buttons_apply">
+                <property name="label" translatable="yes">Apply</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
   <object class="GtkDialog" id="message">
     <property name="width_request">600</property>
     <property name="height_request">260</property>
@@ -570,7 +566,8 @@
     <property name="title" translatable="yes">Tortoise Stash</property>
     <property name="resizable">False</property>
     <property name="window_position">center</property>
-    <property name="type_hint">dialog</property>
+    <property name="type_hint">tooltip</property>
+    <property name="transient_for">main_window</property>
     <child>
       <placeholder/>
     </child>
@@ -632,7 +629,9 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Tortoise Stash</property>
     <property name="resizable">False</property>
+    <property name="window_position">center</property>
     <property name="type_hint">dialog</property>
+    <property name="transient_for">main_window</property>
     <child>
       <placeholder/>
     </child>
@@ -773,5 +772,11 @@
         </child>
       </object>
     </child>
+  </object>
+  <object class="GtkLabel" id="empty">
+    <property name="width_request">375</property>
+    <property name="height_request">90</property>
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
   </object>
 </interface>

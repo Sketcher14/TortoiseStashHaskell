@@ -80,12 +80,15 @@ onDecArrowButtonsClick :: IORef DataState -> IORef CurrentArrow
   -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> Dialog -> Label -> ButtonsPack  -> IO ()
 onDecArrowButtonsClick refState refCurrentArrow = onArrowButtonsClick refState refCurrentArrow getDecFileFromDataState True
 
-onDecPasswordStartClick :: IORef CurrentArrow -> Box -> ButtonsPack -> EmptiesPack -> IO ()
-onDecPasswordStartClick refCurrentArrow decTable decAddButtonsPack emptiesPack = do
+onDecPasswordStartClick :: IORef CurrentArrow -> Box -> ButtonsPack -> FCButtonsPack -> EmptiesPack -> IO ()
+onDecPasswordStartClick refCurrentArrow decTable decAddButtonsPack decFCButtonsPack emptiesPack = do
   currentArrow <- readIORef refCurrentArrow
   decAddButton <- getButtonFromPack decAddButtonsPack $ position currentArrow
+  decFCButton <- getFCButtonFromPack decFCButtonsPack $ position currentArrow
   empty <- getEmptyFromPack emptiesPack $ position currentArrow
-  unless (isEncryption currentArrow) $ replaceInBox decTable (castToWidget decAddButton) (castToWidget empty)
+  unless (isEncryption currentArrow) $ do
+    pos <- get decTable $ boxChildPosition decAddButton
+    replaceInBox decTable (if pos < 0 then castToWidget decFCButton else castToWidget decAddButton) (castToWidget empty)
 
 onDecAfterCrypto :: IORef DataState -> IORef CurrentArrow -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> EmptiesPack -> IO ()
 onDecAfterCrypto refState refCurrentArrow decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack emptiesPack = do

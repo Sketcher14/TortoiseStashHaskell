@@ -149,7 +149,12 @@ arrowButtonClick
               then entrySetText dFileSaveEntry $ filePath ++ "." ++ extension
               else entrySetText dFileSaveEntry $ removeExtension filePath
             fileChooserSetFilter dFileChooser fileFilter
-            widgetShowAll dFileSave
+            answer <- dialogRun dFileSave
+            case answer of
+              ResponseDeleteEvent -> widgetHide dFileSave
+              ResponseNone -> widgetHide dFileSave
+              _ -> print $ "File save other " ++ show answer
+            return ()
 
 onArrowButtonsClick :: IORef DataState -> IORef CurrentArrow ->
   (DataState -> Int -> File) -> Bool -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> Dialog -> Label -> ButtonsPack  -> IO ()
