@@ -82,30 +82,27 @@ onEncArrowButtonsClick :: IORef DataState -> IORef CurrentArrow
   -> Dialog -> Entry -> FileChooserDialog -> FileFilter -> Dialog -> Label -> ButtonsPack  -> IO ()
 onEncArrowButtonsClick refState refCurrentArrow = onArrowButtonsClick refState refCurrentArrow getEncFileFromDataState False
 
-onEncPasswordStartClick :: IORef CurrentArrow -> Box -> ButtonsPack -> FCButtonsPack -> EmptiesPack -> IO ()
-onEncPasswordStartClick refCurrentArrow encTable encAddButtonsPack encFCButtonsPack emptiesPack = do
-  currentArrow <- readIORef refCurrentArrow
-  encAddButton <- getButtonFromPack encAddButtonsPack $ position currentArrow
-  encFCButton <- getFCButtonFromPack encFCButtonsPack $ position currentArrow
-  empty <- getEmptyFromPack emptiesPack $ position currentArrow
-  when (isEncryption currentArrow) $ do
+onEncPasswordStartClick ::  Bool -> Int -> Box -> ButtonsPack -> BoxesPack -> EmptiesPack -> IO ()
+onEncPasswordStartClick isEncryption position encTable encAddButtonsPack encFileBoxesPack emptiesPack = do
+  encAddButton <- getButtonFromPack encAddButtonsPack position
+  encFileBox <- getBoxFromPack encFileBoxesPack position
+  empty <- getEmptyFromPack emptiesPack position
+  when isEncryption $ do
     pos <- get encTable $ boxChildPosition encAddButton
-    replaceInBox encTable (if pos < 0 then castToWidget encFCButton else castToWidget encAddButton) (castToWidget empty)
+    replaceInBox encTable (if pos < 0 then castToWidget encFileBox else castToWidget encAddButton) (castToWidget empty)
 
-
-onEncAfterCrypto :: IORef DataState -> IORef CurrentArrow -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> EmptiesPack -> IO ()
-onEncAfterCrypto refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack emptiesPack = do
+onEncAfterCrypto :: IORef DataState -> Bool -> Int -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack -> EmptiesPack -> IO ()
+onEncAfterCrypto refState isEncryption position encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack emptiesPack = do
   state <- readIORef refState
-  currentArrow <- readIORef refCurrentArrow
-  encAddButton <- getButtonFromPack encAddButtonsPack $ position currentArrow
-  encFileBox <- getBoxFromPack encFileBoxesPack $ position currentArrow
-  encFCButton <- getFCButtonFromPack encFCButtonsPack $ position currentArrow
-  empty <- getEmptyFromPack emptiesPack $ position currentArrow
-  if isEncryption currentArrow
+  encAddButton <- getButtonFromPack encAddButtonsPack position
+  encFileBox <- getBoxFromPack encFileBoxesPack position
+  encFCButton <- getFCButtonFromPack encFCButtonsPack position
+  empty <- getEmptyFromPack emptiesPack position
+  if isEncryption
     then do
-      fileChooserSetFilename encFCButton $ createFullPath $ getEncFileFromDataState state $ position currentArrow
+      fileChooserSetFilename encFCButton $ createFullPath $ getEncFileFromDataState state position
       replaceInBox encTable (castToWidget empty) (castToWidget encFileBox)
     else do
       fileChooserSetFilename encFCButton "(No)"
-      writeIORef refState $ updateEncDataState state (position currentArrow) emptyFile
+      writeIORef refState $ updateEncDataState state position emptyFile
       replaceInBox encTable (castToWidget encFileBox) (castToWidget encAddButton)

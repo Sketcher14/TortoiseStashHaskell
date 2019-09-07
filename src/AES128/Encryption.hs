@@ -65,7 +65,5 @@ readEncryptWrite :: String -> String -> String -> IO ()
 readEncryptWrite decPath encPath password = do
   input <- L.readFile decPath
   passwordHash <- passwordHash password
-  print "encrypted start"
   L.writeFile encPath $ unionBlocks $ encrypt (splitByBlocks input) passwordHash
-  print "encrypted end"
   return ()

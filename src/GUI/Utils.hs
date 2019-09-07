@@ -9,6 +9,7 @@ module GUI.Utils
   , FCButtonsPack(..)
   , StringsPack(..)
   , EmptiesPack(..)
+  , ComparisonAnswer(..)
   , extension
   , removeExtension
   , emptyFile
@@ -105,6 +106,8 @@ data EmptiesPack = EmptiesPack
   , empty4 :: Label
   , empty5 :: Label
   }
+
+data ComparisonAnswer = Equal | NotEqual | NotEntered
 
 extension :: String
 extension = "TTS"
@@ -226,17 +229,17 @@ addFileFilterToFCPack
 
 buildEmptiesPack :: Builder -> IO EmptiesPack
 buildEmptiesPack builder = do
-  empty1 <- getLabel builder "empty"
-  empty2 <- getLabel builder "empty"
-  empty3 <- getLabel builder "empty"
-  empty4 <- getLabel builder "empty"
-  empty5 <- getLabel builder "empty"
+  empty1 <- getLabel builder "empty1"
+  empty2 <- getLabel builder "empty2"
+  empty3 <- getLabel builder "empty3"
+  empty4 <- getLabel builder "empty4"
+  empty5 <- getLabel builder "empty5"
   return EmptiesPack { empty1 = empty1
-                   , empty2 = empty2
-                   , empty3 = empty3
-                   , empty4 = empty4
-                   , empty5 = empty5
-                   }
+                     , empty2 = empty2
+                     , empty3 = empty3
+                     , empty4 = empty4
+                     , empty5 = empty5
+                     }
 
 showMessage :: Dialog -> Label -> String -> IO ()
 showMessage dMessage dMessageName text = do

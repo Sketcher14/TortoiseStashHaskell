@@ -92,12 +92,12 @@ mainWindow = do
 
   onFileSaveCancelButtonClick dFileSaveCancel dFileSave
   onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser
-  onFileSaveNextButtonClick state currentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword dPasswordInputEntry dPasswordRepeatEntry
+  onFileSaveNextButtonClick state currentArrow dFileSaveNext dFileSaveEntry dFileSave dPassword dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
 
   onFileChooserCancelClick dFileChooserCancel dFileChooser
   onFileChooserApplyClick currentArrow dFileChooserApply dFileChooser dFileSaveEntry
 
-  onPasswordCancelClick dPasswordCancel dPassword dPasswordInputEntry dPasswordRepeatEntry
+  onPasswordCancelClick dPasswordCancel dPassword dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
   onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
   onPasswordStartClick
     state currentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword emptiesPack

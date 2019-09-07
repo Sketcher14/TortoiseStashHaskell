@@ -21,7 +21,7 @@ import Graphics.UI.Gtk
 import Data.IORef
 import Control.Monad.Trans
 import Data.Maybe
-import Control.Concurrent                 (forkIO, forkFinally)
+import Control.Concurrent          (forkFinally)
 
 onFileSaveBrowseButtonClick :: Button -> FileChooserDialog -> IO ()
 onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser = do
@@ -39,9 +39,9 @@ onFileSaveCancelButtonClick dFileSaveCancel dFileSave = do
   return ()
 
 onFileSaveNextButtonClick :: IORef DataState -> IORef CurrentArrow
-  -> Button -> Entry -> Dialog -> Dialog -> Entry -> Entry -> IO ()
+  -> Button -> Entry -> Dialog -> Dialog -> Entry -> Entry -> Label -> IO ()
 onFileSaveNextButtonClick refState refCurrentArrow
-  dFileSaveNext dFileSaveEntry dFileSave dPassword dPasswordInputEntry dPasswordRepeatEntry = do
+  dFileSaveNext dFileSaveEntry dFileSave dPassword dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel = do
     on dFileSaveNext buttonActivated $ do 
       fullPath::String <- entryGetText dFileSaveEntry
       state <- readIORef refState
@@ -52,8 +52,8 @@ onFileSaveNextButtonClick refState refCurrentArrow
       widgetHide dFileSave
       answer <- dialogRun dPassword
       case answer of
-        ResponseDeleteEvent -> passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry
-        ResponseNone -> passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry
+        ResponseDeleteEvent -> passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
+        ResponseNone -> passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
         _ -> print $ "dPassword other " ++ show answer
     return ()
 
@@ -78,29 +78,35 @@ onFileChooserApplyClick refCurrentArrow dFileChooserApply dFileChooser dFileSave
   on dFileChooserApply buttonActivated $ fileChooserApplyClick refCurrentArrow dFileChooser dFileSaveEntry
   return ()
 
-passwordCancelClick :: Dialog -> Entry -> Entry -> IO ()
-passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry = do
+passwordCancelClick :: Dialog -> Entry -> Entry -> Label -> IO ()
+passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel = do
   entrySetText dPasswordInputEntry ""
   entrySetText dPasswordRepeatEntry ""
+  labelSetText dPasswordLabel ""
   widgetHide dPassword
 
-onPasswordCancelClick :: Button -> Dialog -> Entry -> Entry -> IO ()
-onPasswordCancelClick dPasswordCancel dPassword dPasswordInputEntry dPasswordRepeatEntry = do
-  on dPasswordCancel buttonActivated $ passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry
+onPasswordCancelClick :: Button -> Dialog -> Entry -> Entry -> Label -> IO ()
+onPasswordCancelClick dPasswordCancel dPassword dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel = do
+  on dPasswordCancel buttonActivated $ passwordCancelClick dPassword dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
   return ()
 
-compareEntriesTexts :: Entry -> Entry -> IO Bool
+compareEntriesTexts :: Entry -> Entry -> IO ComparisonAnswer
 compareEntriesTexts entry1 entry2 = do
   text1::String <- entryGetText entry1
   text2::String <- entryGetText entry2
-  return (text1 == text2)
+  if text1 /= text2
+    then return NotEqual
+  else if text1 == ""
+    then return NotEntered
+    else return Equal
 
 passwordEntryReleased :: Entry -> Entry -> Label -> IO ()
 passwordEntryReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel = do
-  bEqual <- compareEntriesTexts dPasswordInputEntry dPasswordRepeatEntry
-  if bEqual
-    then labelSetText dPasswordLabel "Passwords match"
-    else labelSetText dPasswordLabel "Passwords doesn't match"
+  answer <- compareEntriesTexts dPasswordInputEntry dPasswordRepeatEntry
+  case answer of
+    NotEntered -> labelSetText dPasswordLabel "Password is empty"
+    NotEqual -> labelSetText dPasswordLabel "Passwords doesn't match"
+    Equal -> labelSetText dPasswordLabel "Passwords match"
 
 onPasswordEntriesReleased :: Entry -> Entry -> Label -> IO ()
 onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel = do
@@ -110,12 +116,20 @@ onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabe
     passwordEntryReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
   return ()
 
-passwordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> IO () -> IO () -> IO ()
-passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword foo1 foo2 = do
-  bEqual <- compareEntriesTexts dPasswordInputEntry dPasswordRepeatEntry
-  if not bEqual
-    then return ()
-    else do
+createThread :: IO () -> IO () -> IO ()
+createThread action finalAction = do
+  forkFinally action (const finalAction)
+  return ()
+
+passwordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> IO () -> IO () -> IO () -> IO () -> IO ()
+passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword prefoo1 prefoo2 foo1 foo2 = do
+  answer <- compareEntriesTexts dPasswordInputEntry dPasswordRepeatEntry
+  case answer of
+    NotEntered -> return ()
+    NotEqual -> return ()
+    Equal -> do
+      prefoo1
+      prefoo2
       state <- readIORef refState
       currentArrow <- readIORef refCurrentArrow
       let decFullPath = createFullPath $ getDecFileFromDataState state $ position currentArrow
@@ -127,16 +141,10 @@ passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry d
                       then readEncryptWrite decFullPath encFullPath password
                       else readDecryptWrite encFullPath decFullPath password
                    )
-                   (do
-                      foo1
-                      foo2
+                   (do foo1
+                       foo2
                    )
       widgetHide dPassword
-
-createThread :: IO () -> IO () -> IO ()
-createThread action finalAction = do
-  forkFinally action (const finalAction)
-  return ()
 
 onPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> EmptiesPack
   -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack
@@ -146,11 +154,14 @@ onPasswordStartClick
   decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack
   encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack = do
     on dPasswordStart buttonActivated $ do
-      onDecPasswordStartClick refCurrentArrow decTable decAddButtonsPack decFCButtonsPack emptiesPack
-      onEncPasswordStartClick refCurrentArrow encTable encAddButtonsPack encFCButtonsPack emptiesPack
+      currentArrow <- readIORef refCurrentArrow
+      let isEnc = isEncryption currentArrow
+      let pos = position currentArrow
       passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword
-        (onDecAfterCrypto refState refCurrentArrow decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack emptiesPack)
-        (onEncAfterCrypto refState refCurrentArrow encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack emptiesPack)
+        (onDecPasswordStartClick isEnc pos decTable decAddButtonsPack decFileBoxesPack emptiesPack)
+        (onEncPasswordStartClick isEnc pos encTable encAddButtonsPack encFileBoxesPack emptiesPack)
+        (postGUIAsync $ onDecAfterCrypto refState isEnc pos decTable decAddButtonsPack decFileBoxesPack decFCButtonsPack emptiesPack)
+        (postGUIAsync $ onEncAfterCrypto refState isEnc pos encTable encAddButtonsPack encFileBoxesPack encFCButtonsPack emptiesPack)
     return ()
     
 onMessageOkClick :: Dialog -> Button -> IO ()
