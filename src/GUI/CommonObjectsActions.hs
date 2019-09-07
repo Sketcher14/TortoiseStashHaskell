@@ -11,6 +11,7 @@ module GUI.CommonObjectsActions
   ) where
 
 import GUI.Utils
+import GUI.Global
 
 import Graphics.UI.Gtk
 import Data.IORef

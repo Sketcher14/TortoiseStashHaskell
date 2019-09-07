@@ -9,6 +9,7 @@ import Graphics.UI.Gtk
 
 
 import GUI.Utils
+import GUI.Global
 import GUI.DecryptedObjectsActions
 import GUI.EncryptedObjectsActions
 import GUI.IntermediateWindowsActions

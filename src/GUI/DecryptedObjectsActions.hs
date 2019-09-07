@@ -15,6 +15,7 @@ module GUI.DecryptedObjectsActions
   ) where
 
 import GUI.Utils
+import GUI.Global
 import GUI.CommonObjectsActions
 
 import Graphics.UI.Gtk

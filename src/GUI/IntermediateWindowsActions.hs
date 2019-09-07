@@ -12,6 +12,7 @@ module GUI.IntermediateWindowsActions
   ) where
 
 import GUI.Utils
+import GUI.Global
 import GUI.EncryptedObjectsActions
 import GUI.DecryptedObjectsActions
 import AES128.Encryption

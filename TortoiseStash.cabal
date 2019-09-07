@@ -29,7 +29,7 @@ library
   exposed-modules:
       AES128.Encryption, AES128.Decryption, AES128.ExpandedKey, AES128.SBox, AES128.Utils
     , GUI.MainWindow, GUI.Utils, GUI.DecryptedObjectsActions, GUI.EncryptedObjectsActions
-    , GUI.IntermediateWindowsActions, GUI.CommonObjectsActions
+    , GUI.IntermediateWindowsActions, GUI.CommonObjectsActions, GUI.Global
   other-modules:
       Paths_TortoiseStash
   hs-source-dirs:
