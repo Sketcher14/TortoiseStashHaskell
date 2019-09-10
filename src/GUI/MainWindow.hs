@@ -7,7 +7,6 @@ import Data.IORef
 import Control.Monad.Trans
 import Graphics.UI.Gtk
 
-
 import GUI.Utils
 import GUI.Global
 import GUI.DecryptedObjectsActions

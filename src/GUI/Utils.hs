@@ -12,6 +12,7 @@ module GUI.Utils
   , buildEmptiesPack
   , showMessage
   , validateFile
+  , createThread
   ) where
 
 import GUI.Global
@@ -21,7 +22,8 @@ import System.IO
 
 import Graphics.UI.Gtk
 import System.IO.Error
-import Control.Exception (IOException, handle)
+import Control.Exception  (IOException, handle)
+import Control.Concurrent (forkFinally)
 
 removeExtension :: String -> String
 removeExtension name = newName
@@ -109,3 +111,8 @@ validateFile :: String -> IO (Bool, String)
 validateFile filePath = handle (\(e :: IOException) -> print e >> return (False, show e)) $ do
                           h <- openFile filePath ReadMode
                           return (True, "")
+
+createThread :: IO () -> IO () -> IO ()
+createThread action finalAction = do
+  forkFinally action (const finalAction)
+  return ()

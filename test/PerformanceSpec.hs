@@ -20,15 +20,13 @@ runTests = [ bgroup
              "encryption"
                [ bench "file 1mb" $
                    nfIO (readEncryptWrite (sourcePath ++ "1mb.txt") (sourcePath ++ "1mb.txt." ++ extension) password)
-               {-, bench "file 2mb" $
-                   whnf (readEncryptWrite (sourcePath ++ "2mb.txt") (sourcePath ++ "2mb.txt." ++ extension)) password
+               , bench "file 2mb" $
+                   nfIO (readEncryptWrite (sourcePath ++ "2mb.txt") (sourcePath ++ "2mb.txt." ++ extension) password) 
                , bench "file 4mb" $
-                   whnf (readEncryptWrite (sourcePath ++ "4mb.txt") (sourcePath ++ "4mb.txt." ++ extension)) password
+                   nfIO (readEncryptWrite (sourcePath ++ "4mb.txt") (sourcePath ++ "4mb.txt." ++ extension) password) 
                , bench "file 6mb" $
-                   whnf (readEncryptWrite (sourcePath ++ "6mb.txt") (sourcePath ++ "6mb.txt." ++ extension)) password
+                   nfIO (readEncryptWrite (sourcePath ++ "6mb.txt") (sourcePath ++ "6mb.txt." ++ extension) password) 
                , bench "file 8mb" $
-                   whnf (readEncryptWrite (sourcePath ++ "8mb.txt") (sourcePath ++ "8mb.txt." ++ extension)) password-}
+                   nfIO (readEncryptWrite (sourcePath ++ "8mb.txt") (sourcePath ++ "8mb.txt." ++ extension) password) 
                ]
-           {-, bgroup
-             "decrtyption"-}
            ]

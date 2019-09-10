@@ -22,7 +22,6 @@ import Graphics.UI.Gtk
 import Data.IORef
 import Control.Monad.Trans
 import Data.Maybe
-import Control.Concurrent          (forkFinally)
 
 onFileSaveBrowseButtonClick :: Button -> FileChooserDialog -> IO ()
 onFileSaveBrowseButtonClick dFileSaveBrowse dFileChooser = do
@@ -117,35 +116,32 @@ onPasswordEntriesReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabe
     passwordEntryReleased dPasswordInputEntry dPasswordRepeatEntry dPasswordLabel
   return ()
 
-createThread :: IO () -> IO () -> IO ()
-createThread action finalAction = do
-  forkFinally action (const finalAction)
-  return ()
-
-passwordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> IO () -> IO () -> IO () -> IO () -> IO ()
-passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword prefoo1 prefoo2 foo1 foo2 = do
-  answer <- compareEntriesTexts dPasswordInputEntry dPasswordRepeatEntry
-  case answer of
-    NotEntered -> return ()
-    NotEqual -> return ()
-    Equal -> do
-      prefoo1
-      prefoo2
-      state <- readIORef refState
-      currentArrow <- readIORef refCurrentArrow
-      let decFullPath = createFullPath $ getDecFileFromDataState state $ position currentArrow
-      let encFullPath = createFullPath $ getEncFileFromDataState state $ position currentArrow
-      password::String <- entryGetText dPasswordInputEntry
-      entrySetText dPasswordInputEntry ""
-      entrySetText dPasswordRepeatEntry ""
-      createThread (if isEncryption currentArrow
-                      then readEncryptWrite decFullPath encFullPath password
-                      else readDecryptWrite encFullPath decFullPath password
-                   )
-                   (do foo1
-                       foo2
-                   )
-      widgetHide dPassword
+passwordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog 
+  -> IO () -> IO () -> IO () -> IO () -> IO ()
+passwordStartClick refState refCurrentArrow dPasswordStart dPasswordInputEntry dPasswordRepeatEntry dPassword 
+  preDecPassFoo preEncPassFoo postDecPassFoo postEncPassFoo = do
+    answer <- compareEntriesTexts dPasswordInputEntry dPasswordRepeatEntry
+    case answer of
+      NotEntered -> return ()
+      NotEqual -> return ()
+      Equal -> do
+        preDecPassFoo
+        preEncPassFoo
+        state <- readIORef refState
+        currentArrow <- readIORef refCurrentArrow
+        let decFullPath = createFullPath $ getDecFileFromDataState state $ position currentArrow
+        let encFullPath = createFullPath $ getEncFileFromDataState state $ position currentArrow
+        password::String <- entryGetText dPasswordInputEntry
+        entrySetText dPasswordInputEntry ""
+        entrySetText dPasswordRepeatEntry ""
+        createThread (if isEncryption currentArrow
+                        then readEncryptWrite decFullPath encFullPath password
+                        else readDecryptWrite encFullPath decFullPath password
+                     )
+                     (do postDecPassFoo
+                         postEncPassFoo
+                     )
+        widgetHide dPassword
 
 onPasswordStartClick :: IORef DataState -> IORef CurrentArrow -> Button -> Entry -> Entry -> Dialog -> EmptiesPack
   -> Box -> ButtonsPack -> BoxesPack -> FCButtonsPack

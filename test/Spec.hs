@@ -11,13 +11,11 @@ import MixColumnsSpec (runTests)
 import PerformanceSpec (runTests)
 
 main :: IO ()
-main =
-  {-Test.Tasty.defaultMain $ testGroup "Tests"
-    [ SBoxSpec.runTests
-    , ExpandedKeySpec.runTests
-    , EncryptionDecryptionSpec.runTests
-    , AddRoundKeySpec.runTests
-    , ShiftRowsSpec.runTests
-    , MixColumnsSpec.runTests
-    ]-}
-  Criterion.Main.defaultMain [ bgroup "Perfomance tests" PerformanceSpec.runTests ]
+main = Test.Tasty.defaultMain $ testGroup "Tests"
+  [ SBoxSpec.runTests
+  , ExpandedKeySpec.runTests
+  , EncryptionDecryptionSpec.runTests
+  , AddRoundKeySpec.runTests
+  , ShiftRowsSpec.runTests
+  , MixColumnsSpec.runTests
+  ]
